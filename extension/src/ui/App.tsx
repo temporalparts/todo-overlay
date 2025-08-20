@@ -155,7 +155,51 @@ export default function App({ onSnooze }: AppProps) {
       priority,
       dueDate
     };
-    const updatedTasks = [newTask, ...tasks];
+    
+    // Check if active tasks are currently sorted
+    const activeTasks = tasks.filter(t => !t.completed);
+    const completedTasks = tasks.filter(t => t.completed);
+    
+    // Sort function matching TaskList logic
+    const sortTasks = (tasksToSort: Task[]) => {
+      return [...tasksToSort].sort((a, b) => {
+        // First, sort by due date
+        if (a.dueDate && b.dueDate) {
+          const dateA = new Date(a.dueDate + 'T00:00:00').getTime();
+          const dateB = new Date(b.dueDate + 'T00:00:00').getTime();
+          if (dateA !== dateB) return dateA - dateB;
+        } else if (a.dueDate && !b.dueDate) {
+          return -1; // Tasks with dates come before tasks without
+        } else if (!a.dueDate && b.dueDate) {
+          return 1;
+        }
+        
+        // Then sort by priority
+        const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+        const priorityA = a.priority ? priorityOrder[a.priority] : 3;
+        const priorityB = b.priority ? priorityOrder[b.priority] : 3;
+        if (priorityA !== priorityB) return priorityA - priorityB;
+        
+        // Finally, sort by creation date (oldest first)
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
+    };
+    
+    // Check if current active tasks are sorted
+    const sortedActiveTasks = sortTasks(activeTasks);
+    const isSorted = activeTasks.length <= 1 || 
+      activeTasks.every((task, index) => task.id === sortedActiveTasks[index].id);
+    
+    let updatedTasks: Task[];
+    if (isSorted && activeTasks.length > 0) {
+      // If sorted, insert new task in sorted order
+      const allActiveTasks = sortTasks([...activeTasks, newTask]);
+      updatedTasks = [...allActiveTasks, ...completedTasks];
+    } else {
+      // If not sorted or empty, add to beginning
+      updatedTasks = [newTask, ...tasks];
+    }
+    
     setTasks(updatedTasks);
     await saveTasks(updatedTasks);
   };
