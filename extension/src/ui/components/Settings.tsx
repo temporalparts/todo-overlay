@@ -14,6 +14,11 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
   const domainsRef = useRef<HTMLDivElement>(null);
+  
+  // Local state for input fields to prevent updates while typing
+  const [localSnoozeMinutes, setLocalSnoozeMinutes] = useState<string>('');
+  const [localDismissMinutes, setLocalDismissMinutes] = useState<string>('');
+  const [localQuoteSeconds, setLocalQuoteSeconds] = useState<string>('');
 
   // Helper to format time display for settings
   const formatTimeDisplay = (minutes: number): string => {
@@ -79,6 +84,10 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
   const loadSettings = async () => {
     const loadedSettings = await getSettings();
     setSettings(loadedSettings);
+    // Initialize local state with loaded settings
+    setLocalSnoozeMinutes(loadedSettings.snoozeMinutes.toString());
+    setLocalDismissMinutes(loadedSettings.dismissMinutes.toString());
+    setLocalQuoteSeconds(loadedSettings.quoteRotationSeconds.toString());
     setLoading(false);
   };
 
@@ -317,8 +326,14 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
               type="number"
               min="0.25"
               step="0.25"
-              value={settings.snoozeMinutes}
-              onChange={(e) => handleTimersUpdate('snoozeMinutes', parseFloat(e.currentTarget.value) || 5)}
+              value={localSnoozeMinutes}
+              onChange={(e) => setLocalSnoozeMinutes(e.currentTarget.value)}
+              onBlur={() => handleTimersUpdate('snoozeMinutes', parseFloat(localSnoozeMinutes) || 5)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                }
+              }}
               className="w-32 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -333,8 +348,14 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
               type="number"
               min="1"
               step="1"
-              value={settings.dismissMinutes}
-              onChange={(e) => handleTimersUpdate('dismissMinutes', parseInt(e.currentTarget.value) || 60)}
+              value={localDismissMinutes}
+              onChange={(e) => setLocalDismissMinutes(e.currentTarget.value)}
+              onBlur={() => handleTimersUpdate('dismissMinutes', parseInt(localDismissMinutes) || 60)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                }
+              }}
               className="w-32 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -360,10 +381,16 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
                 </label>
                 <input
                   type="number"
-                  min="5"
-                  step="5"
-                  value={settings.quoteRotationSeconds}
-                  onChange={(e) => handleTimersUpdate('quoteRotationSeconds', parseInt(e.currentTarget.value) || 20)}
+                  min="1"
+                  step="1"
+                  value={localQuoteSeconds}
+                  onChange={(e) => setLocalQuoteSeconds(e.currentTarget.value)}
+                  onBlur={() => handleTimersUpdate('quoteRotationSeconds', parseInt(localQuoteSeconds) || 20)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.currentTarget.blur();
+                    }
+                  }}
                   className="w-32 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white"
                   disabled={!settings.enableQuoteRotation}
                 />
