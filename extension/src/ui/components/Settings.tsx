@@ -179,7 +179,7 @@ export default function Settings() {
             className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
           />
           <span className="text-gray-700 dark:text-gray-300">
-            Automatically show overlay on blocked domains
+            Automatically show overlay on enabled domains
           </span>
         </label>
       </div>
@@ -225,10 +225,10 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Blocked domains */}
+      {/* Enabled domains */}
       <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Blocked Domains
+          Enabled Domains
         </h3>
         
         {/* Add domain form */}
@@ -253,7 +253,7 @@ export default function Settings() {
         <div className="space-y-2">
           {settings.domains.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              No domains blocked yet. Add domains above to get started.
+              No domains enabled yet. Add domains above to get started.
             </p>
           ) : (
             settings.domains.map(domain => (

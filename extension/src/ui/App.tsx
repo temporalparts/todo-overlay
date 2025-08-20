@@ -176,7 +176,7 @@ export default function App({ onSnooze }: AppProps) {
             </div>
           </div>
           <p className="text-white/80">
-            Your time is valuable. Consider your priorities prior to giving your time to {currentDomain}.
+            Your life is precious. Consider before gifting your time to <span className="font-mono">{currentDomain}</span>.
           </p>
         </div>
       </div>
