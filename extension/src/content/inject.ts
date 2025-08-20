@@ -53,10 +53,58 @@ class OverlayManager {
     // Wait for body to be available
     await this.waitForBody();
     
+    // Inject global style to fix YouTube-specific viewport issues
+    const globalStyleId = 'tabula-youtube-fix';
+    if (!document.getElementById(globalStyleId)) {
+      const globalStyle = document.createElement('style');
+      globalStyle.id = globalStyleId;
+      globalStyle.textContent = `
+        /* Fix for YouTube's viewport manipulation */
+        html:has(#tabula-overlay), 
+        body:has(#tabula-overlay) {
+          overflow: hidden !important;
+          position: static !important;
+          transform: none !important;
+        }
+        #tabula-overlay {
+          position: fixed !important;
+          inset: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 2147483647 !important;
+        }
+        /* Ensure YouTube's player and other elements don't interfere */
+        ytd-app, #content, #page-manager {
+          transform: none !important;
+        }
+      `;
+      document.head.appendChild(globalStyle);
+    }
+    
     // Create container that takes over entire viewport
     this.overlayRoot = document.createElement('div');
     this.overlayRoot.id = 'tabula-overlay';
-    this.overlayRoot.style.cssText = 'position: fixed; inset: 0; z-index: 2147483647;'; // Max z-index
+    // Reset all potential CSS interference and ensure full viewport coverage
+    this.overlayRoot.style.cssText = `
+      position: fixed !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: none !important;
+      max-height: none !important;
+      min-width: 100vw !important;
+      min-height: 100vh !important;
+      z-index: 2147483647 !important;
+      transform: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: block !important;
+      box-sizing: border-box !important;
+      overflow: visible !important;
+    `.replace(/\s+/g, ' ').trim();
     
     // Prevent scroll events from reaching the underlying page
     this.overlayRoot.addEventListener('wheel', (e) => {
@@ -76,8 +124,25 @@ class OverlayManager {
       const response = await fetch(cssUrl);
       const cssText = await response.text();
       
+      // Add additional viewport fix CSS specifically for YouTube
+      const viewportFix = `
+        :host {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          display: block !important;
+        }
+        * {
+          max-width: none !important;
+        }
+      `;
+      
       const styleEl = document.createElement('style');
-      styleEl.textContent = cssText;
+      styleEl.textContent = viewportFix + '\n' + cssText;
       this.shadowRoot.appendChild(styleEl);
     } catch (error) {
       console.error('[TABULA] Failed to load styles:', error);
@@ -103,10 +168,32 @@ class OverlayManager {
       return;
     }
     
-    document.body.appendChild(this.overlayRoot);
+    // Try appending to documentElement first for better compatibility with YouTube
+    // Fall back to body if that fails
+    try {
+      // First, let's ensure we're at the top level document, not in an iframe
+      if (window.self !== window.top) {
+        console.log('[TABULA] Running in iframe context, using parent document if possible');
+      }
+      
+      // Append to documentElement for maximum coverage
+      if (document.documentElement) {
+        document.documentElement.appendChild(this.overlayRoot);
+      } else {
+        document.body.appendChild(this.overlayRoot);
+      }
+    } catch (e) {
+      console.log('[TABULA] Failed to append to documentElement, using body', e);
+      document.body.appendChild(this.overlayRoot);
+    }
     
     // Disable scrolling on the body when overlay is shown
     document.body.style.overflow = 'hidden';
+    
+    // Also set overflow on html element for YouTube compatibility
+    if (document.documentElement) {
+      document.documentElement.style.overflow = 'hidden';
+    }
   }
 
   private waitForBody(): Promise<void> {
@@ -165,8 +252,17 @@ class OverlayManager {
       this.overlayRoot = null;
       this.shadowRoot = null;
       
-      // Re-enable scrolling on the body
+      // Re-enable scrolling on the body and html
       document.body.style.overflow = '';
+      if (document.documentElement) {
+        document.documentElement.style.overflow = '';
+      }
+      
+      // Remove global YouTube fix styles
+      const globalStyle = document.getElementById('tabula-youtube-fix');
+      if (globalStyle) {
+        globalStyle.remove();
+      }
     }
   }
 

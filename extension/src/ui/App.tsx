@@ -313,7 +313,9 @@ export default function App({ onSnooze }: AppProps) {
 
   // Full-screen takeover UI
   return (
-    <div className={`fixed inset-0 bg-white dark:bg-zinc-950 flex flex-col h-screen w-screen overflow-hidden ${isDark ? 'dark' : ''}`}>
+    <div 
+      className={`fixed inset-0 bg-white dark:bg-zinc-950 flex flex-col overflow-hidden ${isDark ? 'dark' : ''}`}
+      style={{ width: '100vw', height: '100vh', maxWidth: '100vw', maxHeight: '100vh' }}>
       {/* Undo Prompt Popup */}
       {showUndoPrompt && undoHistory.length > 0 && (
         <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
