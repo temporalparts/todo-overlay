@@ -1,7 +1,7 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import browser from 'webextension-polyfill';
-import { Task, Settings as SettingsType } from '../types';
+import { Task, Settings as SettingsType, Priority } from '../types';
 import { getTasks, saveTasks, getSettings } from '../state/storage';
 import { getRootDomain } from '../lib/domain';
 import { getShuffledQuotes, Quote } from '../data/quotes';
@@ -146,12 +146,14 @@ export default function App({ onSnooze }: AppProps) {
     }
   };
 
-  const addTask = async (title: string) => {
+  const addTask = async (title: string, priority?: Priority, dueDate?: string) => {
     const newTask: Task = {
       id: crypto.randomUUID(),
       title,
       completed: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      priority,
+      dueDate
     };
     const updatedTasks = [newTask, ...tasks];
     setTasks(updatedTasks);
@@ -168,6 +170,11 @@ export default function App({ onSnooze }: AppProps) {
 
   const deleteTask = async (id: string) => {
     const updatedTasks = tasks.filter(task => task.id !== id);
+    setTasks(updatedTasks);
+    await saveTasks(updatedTasks);
+  };
+
+  const reorderTasks = async (updatedTasks: Task[]) => {
     setTasks(updatedTasks);
     await saveTasks(updatedTasks);
   };
@@ -290,13 +297,11 @@ export default function App({ onSnooze }: AppProps) {
 
               {/* Task list */}
               <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
-                <h2 className="text-xl font-normal text-gray-900 dark:text-white mb-4">
-                  Your Tasks
-                </h2>
                 <TaskList 
                   tasks={tasks}
                   onToggle={toggleTask}
                   onDelete={deleteTask}
+                  onReorder={reorderTasks}
                 />
               </div>
             </>
