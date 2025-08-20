@@ -170,7 +170,7 @@ export default function App({ onSnooze }: AppProps) {
               <div>
                 <h1 className="text-5xl font-light tracking-tight">tabula</h1>
                 <p className="text-xs text-white/80 tracking-wider">
-                  <span className="underline">ta</span>ke <span className="underline">b</span>ack <span className="underline italic">your</span> <span className="italic font-bold"><span className="underline">L</span>ife</span> <span className="underline">a</span>gain
+                  <span className="underline">ta</span>ke <span className="underline">b</span>ack <span className="italic font-dramatic tracking-wide text-sm">your</span> <span className="italic font-dramatic tracking-widest text-sm">life</span> <span className="underline">a</span>gain
                 </p>
               </div>
               <button

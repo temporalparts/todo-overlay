@@ -8,6 +8,7 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+        dramatic: ['Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-in-out',
