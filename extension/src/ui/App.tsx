@@ -147,9 +147,9 @@ export default function App({ onSnooze }: AppProps) {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold">TABULA</h1>
+                <h1 className="text-5xl font-light tracking-tight">tabula</h1>
                 <p className="text-xs text-white/80 tracking-wider">
-                  <span className="font-bold">TA</span>ke <span className="font-bold">B</span>ack <span className="font-bold">YOUR</span> <span className="underline font-bold">L</span><span className="underline">ife</span> <span className="font-bold">A</span>gain
+                  <span className="underline">ta</span>ke <span className="underline">b</span>ack <span className="underline italic">your</span> <span className="italic font-bold"><span className="underline">L</span>ife</span> <span className="underline">a</span>gain
                 </p>
               </div>
               <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
@@ -159,7 +159,7 @@ export default function App({ onSnooze }: AppProps) {
             <div className="flex gap-3">
               <button
                 onClick={handleSnooze}
-                className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors"
+                className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors"
                 title={`Snooze for ${settings?.snoozeMinutes || 0.25} minutes`}
               >
                 Snooze {settings?.snoozeMinutes && settings.snoozeMinutes < 1 
@@ -168,7 +168,7 @@ export default function App({ onSnooze }: AppProps) {
               </button>
               <button
                 onClick={handleDismiss}
-                className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors"
+                className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors"
                 title={`Dismiss for ${settings?.dismissMinutes || 1} minutes`}
               >
                 Dismiss {settings?.dismissMinutes || 1}m
@@ -187,7 +187,7 @@ export default function App({ onSnooze }: AppProps) {
           <div className="flex gap-1">
             <button
               onClick={() => setActiveTab('tasks')}
-              className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+              className={`px-4 py-3 font-normal transition-colors border-b-2 ${
                 activeTab === 'tasks'
                   ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
                   : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white'
@@ -197,7 +197,7 @@ export default function App({ onSnooze }: AppProps) {
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+              className={`px-4 py-3 font-normal transition-colors border-b-2 ${
                 activeTab === 'settings'
                   ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
                   : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white'
@@ -216,7 +216,7 @@ export default function App({ onSnooze }: AppProps) {
             <>
               {/* Add task form */}
               <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-normal text-gray-900 dark:text-white mb-4">
                   Add New Task
                 </h2>
                 <AddTask onAdd={addTask} />
@@ -224,7 +224,7 @@ export default function App({ onSnooze }: AppProps) {
 
               {/* Task list */}
               <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-normal text-gray-900 dark:text-white mb-4">
                   Your Tasks
                 </h2>
                 <TaskList 
