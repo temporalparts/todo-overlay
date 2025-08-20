@@ -315,7 +315,15 @@ export default function App({ onSnooze }: AppProps) {
   return (
     <div 
       className={`fixed inset-0 bg-white dark:bg-zinc-950 flex flex-col overflow-hidden ${isDark ? 'dark' : ''}`}
-      style={{ width: '100vw', height: '100vh', maxWidth: '100vw', maxHeight: '100vh' }}>
+      style={{ 
+        width: '100vw', 
+        height: '100vh', 
+        maxWidth: '100vw', 
+        maxHeight: '100vh',
+        fontSize: '16px',  // Base font size to ensure consistency
+        zoom: 1,  // Reset any zoom
+        transform: 'none'  // Reset any transforms
+      }}>
       {/* Undo Prompt Popup */}
       {showUndoPrompt && undoHistory.length > 0 && (
         <div className="fixed bottom-4 right-4 z-50 animate-slide-up">

@@ -65,6 +65,7 @@ class OverlayManager {
           overflow: hidden !important;
           position: static !important;
           transform: none !important;
+          zoom: 1 !important;
         }
         #tabula-overlay {
           position: fixed !important;
@@ -72,10 +73,18 @@ class OverlayManager {
           width: 100vw !important;
           height: 100vh !important;
           z-index: 2147483647 !important;
+          zoom: 1 !important;
+          transform: none !important;
+          font-size: 16px !important;
         }
         /* Ensure YouTube's player and other elements don't interfere */
-        ytd-app, #content, #page-manager {
+        ytd-app, #content, #page-manager, #container {
           transform: none !important;
+          zoom: 1 !important;
+        }
+        /* Reset YouTube's responsive zoom */
+        html {
+          zoom: 1 !important;
         }
       `;
       document.head.appendChild(globalStyle);
@@ -135,9 +144,29 @@ class OverlayManager {
           width: 100vw !important;
           height: 100vh !important;
           display: block !important;
+          /* Reset any zoom or scale transforms */
+          zoom: 1 !important;
+          transform: none !important;
+          transform-origin: top left !important;
         }
+        
+        /* Ensure consistent sizing for all elements */
         * {
           max-width: none !important;
+          zoom: 1 !important;
+          transform: none !important;
+        }
+        
+        /* Force consistent font sizing */
+        :host > * {
+          font-size: 16px !important;
+          zoom: 1 !important;
+        }
+        
+        /* Reset any inherited zoom from YouTube */
+        :host, :host * {
+          -webkit-text-size-adjust: 100% !important;
+          text-size-adjust: 100% !important;
         }
       `;
       
