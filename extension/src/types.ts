@@ -13,6 +13,7 @@ export interface Settings {
   autoOpenOnAllowlisted: boolean;
   snoozeMinutes: number; // How long to snooze
   dismissMinutes: number; // How long to dismiss
+  enableQuoteRotation: boolean; // Whether to enable automatic quote rotation
   quoteRotationSeconds: number; // How often to rotate quotes (in seconds)
 }
 

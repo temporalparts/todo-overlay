@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS: Settings = {
   autoOpenOnAllowlisted: true,
   snoozeMinutes: 15, // 15 minutes default
   dismissMinutes: 60, // 60 minutes default
+  enableQuoteRotation: false, // Disable quote rotation by default
   quoteRotationSeconds: 20 // 20 seconds default
 };
 
@@ -35,6 +36,9 @@ export async function getSettings(): Promise<Settings> {
   }
   if (settings.dismissMinutes === undefined) {
     settings.dismissMinutes = DEFAULT_SETTINGS.dismissMinutes;
+  }
+  if (settings.enableQuoteRotation === undefined) {
+    settings.enableQuoteRotation = DEFAULT_SETTINGS.enableQuoteRotation;
   }
   if (settings.quoteRotationSeconds === undefined) {
     settings.quoteRotationSeconds = DEFAULT_SETTINGS.quoteRotationSeconds;

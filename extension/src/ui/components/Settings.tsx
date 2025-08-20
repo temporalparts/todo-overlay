@@ -155,6 +155,18 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
     setSettings(updatedSettings);
   };
 
+  const handleToggleQuoteRotation = async () => {
+    if (!settings) return;
+    
+    const updatedSettings = {
+      ...settings,
+      enableQuoteRotation: !settings.enableQuoteRotation
+    };
+    
+    await saveSettings(updatedSettings);
+    setSettings(updatedSettings);
+  };
+
   if (loading || !settings) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -271,20 +283,36 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
             </p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Quote Display Duration (seconds)
+            <label className="flex items-center gap-3 cursor-pointer mb-3">
+              <input
+                type="checkbox"
+                checked={settings.enableQuoteRotation}
+                onChange={handleToggleQuoteRotation}
+                className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Enable Quote Rotation
+              </span>
             </label>
-            <input
-              type="number"
-              min="5"
-              step="5"
-              value={settings.quoteRotationSeconds}
-              onChange={(e) => handleTimersUpdate('quoteRotationSeconds', parseInt(e.currentTarget.value) || 20)}
-              className="w-32 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Each quote displays for {settings.quoteRotationSeconds} seconds
-            </p>
+            {settings.enableQuoteRotation && (
+              <>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Quote Display Duration (seconds)
+                </label>
+                <input
+                  type="number"
+                  min="5"
+                  step="5"
+                  value={settings.quoteRotationSeconds}
+                  onChange={(e) => handleTimersUpdate('quoteRotationSeconds', parseInt(e.currentTarget.value) || 20)}
+                  className="w-32 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white"
+                  disabled={!settings.enableQuoteRotation}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Each quote displays for {settings.quoteRotationSeconds} seconds
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

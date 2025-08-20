@@ -63,7 +63,7 @@ export default function App({ onSnooze }: AppProps) {
 
   // Rotate quotes based on interval setting
   useEffect(() => {
-    if (!settings || quotesArray.length === 0) return;
+    if (!settings || quotesArray.length === 0 || !settings.enableQuoteRotation) return;
     
     const transitionDuration = 700; // Duration of the fade animation in ms
     const interval = setInterval(() => {
@@ -82,7 +82,7 @@ export default function App({ onSnooze }: AppProps) {
     }, (settings.quoteRotationSeconds * 1000) + transitionDuration);
     
     return () => clearInterval(interval);
-  }, [settings?.quoteRotationSeconds, quotesArray.length]);
+  }, [settings?.enableQuoteRotation, settings?.quoteRotationSeconds, quotesArray.length]);
 
   useEffect(() => {
     loadInitialData();
@@ -213,7 +213,7 @@ export default function App({ onSnooze }: AppProps) {
               <div>
                 <h1 className="text-5xl font-light tracking-tight">tabula</h1>
                 <p className="text-xs text-white/80 tracking-wider">
-                  <span className="underline">ta</span>ke <span className="underline">b</span>ack <span className="italic font-dramatic tracking-wide text-sm">your</span> <span className="italic font-dramatic tracking-widest text-sm">life</span> <span className="underline">a</span>gain
+                  <span className="underline">ta</span>ke <span className="underline">b</span>ack <span className="italic underline font-dramatic tracking-wide text-sm">your</span> <span className="underline">L</span>ife <span className="underline">a</span>gain
                 </p>
               </div>
               <button
