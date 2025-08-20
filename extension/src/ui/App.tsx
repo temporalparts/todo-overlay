@@ -285,9 +285,6 @@ export default function App({ onSnooze }: AppProps) {
             <>
               {/* Add task form */}
               <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6">
-                <h2 className="text-xl font-normal text-gray-900 dark:text-white mb-4">
-                  Add New Task
-                </h2>
                 <AddTask onAdd={addTask} />
               </div>
 

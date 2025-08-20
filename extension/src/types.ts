@@ -15,6 +15,7 @@ export interface Settings {
   dismissMinutes: number; // How long to dismiss
   enableQuoteRotation: boolean; // Whether to enable automatic quote rotation
   quoteRotationSeconds: number; // How often to rotate quotes (in seconds)
+  enablePlaceholderRotation: boolean; // Whether to enable placeholder rotation in task input
 }
 
 export interface SnoozeState {
