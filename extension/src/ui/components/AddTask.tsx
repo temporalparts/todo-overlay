@@ -106,6 +106,7 @@ export default function AddTask({ onAdd }: AddTaskProps) {
       initialDueDate={new Date().toISOString().split('T')[0]}
       autoFocus={true}
       showTestDateOptions={true}
+      resetOnClear={true}
     />
   );
 }

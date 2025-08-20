@@ -15,6 +15,7 @@ interface TaskFormProps {
   placeholder?: string;
   autoFocus?: boolean;
   showTestDateOptions?: boolean;
+  resetOnClear?: boolean; // Reset priority and date when text is cleared
 }
 
 export default function TaskForm({
@@ -27,7 +28,8 @@ export default function TaskForm({
   showCancel = false,
   placeholder = 'Task title',
   autoFocus = false,
-  showTestDateOptions = true
+  showTestDateOptions = true,
+  resetOnClear = false
 }: TaskFormProps) {
   const [title, setTitle] = useState(initialTitle);
   const [priority, setPriority] = useState<Priority | undefined>(initialPriority);
@@ -63,6 +65,10 @@ export default function TaskForm({
     setTitle(value);
     if (value.trim()) {
       setShowError(false);
+    } else if (resetOnClear && !value) {
+      // Reset priority and date when text is cleared (only for add mode)
+      setPriority(undefined);
+      setDueDate(new Date().toISOString().split('T')[0]);
     }
   };
 
