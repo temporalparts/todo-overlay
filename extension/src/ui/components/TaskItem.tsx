@@ -39,7 +39,7 @@ export default function TaskItem({ task, onToggle, onDelete, isDraggable }: Task
   };
 
   const formatDueDate = (dateString: string | undefined, isCompleted: boolean) => {
-    if (!dateString || isCompleted) return null;
+    if (!dateString) return null;
     
     const date = new Date(dateString + 'T00:00:00'); // Ensure local timezone
     const today = new Date();
@@ -50,43 +50,56 @@ export default function TaskItem({ task, onToggle, onDelete, isDraggable }: Task
     const diffTime = dueDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    let dueText = '';
-    let dueClass = 'text-gray-500 dark:text-gray-400';
-    
-    if (diffDays < 0) {
-      dueText = `${Math.abs(diffDays)} days overdue`;
-      dueClass = 'text-red-600 dark:text-red-400 font-medium';
-    } else if (diffDays === 0) {
-      dueText = 'Due today';
-      dueClass = 'text-green-600 dark:text-green-400 font-medium';
-    } else if (diffDays === 1) {
-      dueText = 'Due tomorrow';
-      dueClass = 'text-yellow-600 dark:text-yellow-400';
-    } else if (diffDays <= 7) {
-      dueText = `Due in ${diffDays} days`;
-      dueClass = 'text-gray-600 dark:text-gray-300';
-    } else {
-      // Format as YYYY/MM/DD for longer durations
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      dueText = `${year}/${month}/${day}`;
-    }
-    
-    return (
-      <span className={`text-xs ${dueClass}`}>
-        {dueText}
-      </span>
-    );
-  };
-
-  const formatCreatedDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Always format the date as YYYY/MM/DD
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}/${month}/${day}`;
+    const formattedDate = `${year}/${month}/${day}`;
+    
+    if (isCompleted) {
+      // For completed tasks, only show the date in gray
+      return (
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {formattedDate}
+        </span>
+      );
+    } else {
+      // For active tasks, show with colored relative text and gray date
+      let relativeText = '';
+      let relativeClass = '';
+      
+      if (diffDays < 0) {
+        relativeText = `${Math.abs(diffDays)} days overdue`;
+        relativeClass = 'text-red-600 dark:text-red-400 font-medium';
+      } else if (diffDays === 0) {
+        relativeText = 'Due today';
+        relativeClass = 'text-green-600 dark:text-green-400 font-medium';
+      } else if (diffDays === 1) {
+        relativeText = 'Due tomorrow';
+        relativeClass = 'text-yellow-600 dark:text-yellow-400';
+      } else if (diffDays <= 7) {
+        relativeText = `Due in ${diffDays} days`;
+        relativeClass = 'text-gray-600 dark:text-gray-300';
+      }
+      
+      if (relativeText) {
+        return (
+          <span className="text-xs">
+            <span className={relativeClass}>{relativeText}</span>
+            <span className="text-gray-500 dark:text-gray-400"> - {formattedDate}</span>
+          </span>
+        );
+      } else {
+        // For dates more than 7 days away, just show the date
+        return (
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {formattedDate}
+          </span>
+        );
+      }
+    }
   };
+
 
   const priorityColors = getPriorityColor(task.priority);
   
@@ -108,7 +121,7 @@ export default function TaskItem({ task, onToggle, onDelete, isDraggable }: Task
       </button>
 
       <div className="flex-1">
-        <div className="flex items-baseline gap-2">
+        <div className={`${task.completed ? 'flex items-baseline gap-2' : ''}`}>
           <span className={`${
             task.completed 
               ? 'text-gray-500 dark:text-gray-500 line-through' 
@@ -116,11 +129,13 @@ export default function TaskItem({ task, onToggle, onDelete, isDraggable }: Task
           }`}>
             {task.title}
           </span>
-          <span className="text-xs text-gray-400 dark:text-gray-500">
-            {formatCreatedDate(task.createdAt)}
-          </span>
+          {task.completed && formatDueDate(task.dueDate, task.completed) && (
+            <span className="flex-shrink-0">
+              {formatDueDate(task.dueDate, task.completed)}
+            </span>
+          )}
         </div>
-        {formatDueDate(task.dueDate, task.completed) && (
+        {!task.completed && formatDueDate(task.dueDate, task.completed) && (
           <div className="mt-1">
             {formatDueDate(task.dueDate, task.completed)}
           </div>

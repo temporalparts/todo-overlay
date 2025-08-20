@@ -51,7 +51,22 @@ export default function TaskList({ tasks, onToggle, onDelete, onReorder }: TaskL
   };
 
   const baseActiveTasks = tasks.filter(t => !t.completed);
-  const completedTasks = tasks.filter(t => t.completed);
+  const unsortedCompletedTasks = tasks.filter(t => t.completed);
+  
+  // Sort completed tasks by date descending (newest first), then priority descending (high > medium > low)
+  const completedTasks = [...unsortedCompletedTasks].sort((a, b) => {
+    // First sort by completion date (using createdAt as proxy for completion time)
+    // We could also use dueDate if preferred
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    if (dateA !== dateB) return dateB - dateA; // Descending (newest first)
+    
+    // Then sort by priority (high > medium > low > none)
+    const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+    const priorityA = a.priority ? priorityOrder[a.priority] : 3;
+    const priorityB = b.priority ? priorityOrder[b.priority] : 3;
+    return priorityA - priorityB;
+  });
   
   // Use temporary order during drag, otherwise use base order
   const activeTasks = draggedTask && tempActiveTasks.length > 0 ? tempActiveTasks : baseActiveTasks;
