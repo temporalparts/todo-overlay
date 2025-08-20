@@ -28,23 +28,6 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
         button?.focus();
       }
       
-      // Prevent Enter from bubbling up to form when dropdown is open
-      if (e.key === 'Enter' && showDropdown) {
-        // Check if the target is inside the dropdown or is the dropdown itself
-        const dropdown = dropdownRef.current?.querySelector('.absolute');
-        if (dropdown && (dropdown.contains(e.target as Node) || dropdownRef.current?.contains(e.target as Node))) {
-          // Prevent the event from reaching the form
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          // Allow the button to handle the click
-          const target = e.target as HTMLElement;
-          if (target.tagName === 'BUTTON') {
-            target.click();
-          }
-        }
-      }
-      
       // Focus trapping
       if (e.key === 'Tab' && showDropdown) {
         const focusableElements = dropdownRef.current?.querySelectorAll(
@@ -75,8 +58,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
     if (showDropdown) {
       // Use click instead of mousedown to allow button clicks to fire first
       document.addEventListener('click', handleClickOutside);
-      // Use capture phase to intercept Enter before it bubbles to form
-      document.addEventListener('keydown', handleKeyDown, true);
+      document.addEventListener('keydown', handleKeyDown);
       
       // Focus the first preset button when dropdown opens
       setTimeout(() => {
@@ -93,7 +75,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
       
       return () => {
         document.removeEventListener('click', handleClickOutside);
-        document.removeEventListener('keydown', handleKeyDown, true);
+        document.removeEventListener('keydown', handleKeyDown);
       };
     }
   }, [showDropdown]);

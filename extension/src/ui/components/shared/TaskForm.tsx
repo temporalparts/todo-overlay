@@ -77,10 +77,19 @@ export default function TaskForm({
     if (e.key === 'Enter') {
       // Check if the date picker dropdown is open
       const dateDropdown = document.querySelector('.date-dropdown-wrapper .absolute');
-      if (!dateDropdown) {
+      // Also check if the target is a button inside the dropdown
+      const target = e.target as HTMLElement;
+      const isInDropdown = target.closest('.date-dropdown-wrapper .absolute');
+      
+      if (!dateDropdown && !isInDropdown) {
         // Only submit if date picker dropdown is not open
         e.preventDefault();
         handleSubmit();
+      } else if (isInDropdown && target.tagName === 'BUTTON') {
+        // If we're in the dropdown and on a button, prevent form submission
+        e.preventDefault();
+        e.stopPropagation();
+        // Don't trigger click here, let the button handle it naturally
       }
     }
   };
