@@ -7,14 +7,16 @@ interface TaskListProps {
   tasks: Task[];
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, updates: Partial<Task>) => void;
   onReorder: (tasks: Task[]) => void;
 }
 
-export default function TaskList({ tasks, onToggle, onDelete, onReorder }: TaskListProps) {
+export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorder }: TaskListProps) {
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [draggedOverTask, setDraggedOverTask] = useState<Task | null>(null);
   const [tempActiveTasks, setTempActiveTasks] = useState<Task[]>([]);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12">
@@ -190,7 +192,11 @@ export default function TaskList({ tasks, onToggle, onDelete, onReorder }: TaskL
                 task={task}
                 onToggle={onToggle}
                 onDelete={onDelete}
+                onUpdate={onUpdate}
                 isDraggable={true}
+                isEditing={editingTaskId === task.id}
+                onEditStart={() => setEditingTaskId(task.id)}
+                onEditEnd={() => setEditingTaskId(null)}
               />
             </div>
           ))}
@@ -223,6 +229,10 @@ export default function TaskList({ tasks, onToggle, onDelete, onReorder }: TaskL
                   task={task}
                   onToggle={onToggle}
                   onDelete={onDelete}
+                  onUpdate={onUpdate}
+                  isEditing={editingTaskId === task.id}
+                  onEditStart={() => setEditingTaskId(task.id)}
+                  onEditEnd={() => setEditingTaskId(null)}
                 />
               ))}
             </div>

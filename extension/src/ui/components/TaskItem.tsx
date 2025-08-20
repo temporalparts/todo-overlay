@@ -1,14 +1,29 @@
 import { h } from 'preact';
 import { Task, Priority } from '../../types';
+import TaskForm from './shared/TaskForm';
 
 interface TaskItemProps {
   task: Task;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, updates: Partial<Task>) => void;
   isDraggable?: boolean;
+  isEditing?: boolean;
+  onEditStart?: () => void;
+  onEditEnd?: () => void;
 }
 
-export default function TaskItem({ task, onToggle, onDelete, isDraggable }: TaskItemProps) {
+export default function TaskItem({ 
+  task, 
+  onToggle, 
+  onDelete, 
+  onUpdate, 
+  isDraggable, 
+  isEditing = false, 
+  onEditStart, 
+  onEditEnd 
+}: TaskItemProps) {
+  
   const getPriorityColor = (priority?: Priority) => {
     if (!priority) return {
       border: 'border-gray-300 dark:border-zinc-600',
@@ -100,8 +115,38 @@ export default function TaskItem({ task, onToggle, onDelete, isDraggable }: Task
     }
   };
 
-
   const priorityColors = getPriorityColor(task.priority);
+  
+  const handleSave = (title: string, priority?: Priority, dueDate?: string) => {
+    onUpdate(task.id, {
+      title,
+      priority,
+      dueDate: dueDate || undefined
+    });
+    onEditEnd?.();
+  };
+
+  const handleCancel = () => {
+    onEditEnd?.();
+  };
+  
+  if (isEditing) {
+    return (
+      <div className="p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-lg">
+        <TaskForm
+          initialTitle={task.title}
+          initialPriority={task.priority}
+          initialDueDate={task.dueDate || ''}
+          onSave={handleSave}
+          onCancel={handleCancel}
+          submitLabel="Save"
+          showCancel={true}
+          autoFocus={true}
+          showTestDateOptions={true}
+        />
+      </div>
+    );
+  }
   
   return (
     <div className="group flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700/50 transition-colors">
@@ -141,6 +186,18 @@ export default function TaskItem({ task, onToggle, onDelete, isDraggable }: Task
           </div>
         )}
       </div>
+
+      {!task.completed && (
+        <button
+          onClick={() => onEditStart?.()}
+          className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
+          title="Edit task"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </button>
+      )}
 
       <button
         onClick={() => onDelete(task.id)}

@@ -226,6 +226,14 @@ export default function App({ onSnooze }: AppProps) {
     await saveTasks(updatedTasks);
   };
 
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    const updatedTasks = tasks.map(task => 
+      task.id === id ? { ...task, ...updates } : task
+    );
+    setTasks(updatedTasks);
+    await saveTasks(updatedTasks);
+  };
+
   const reorderTasks = async (updatedTasks: Task[]) => {
     setTasks(updatedTasks);
     await saveTasks(updatedTasks);
@@ -353,6 +361,7 @@ export default function App({ onSnooze }: AppProps) {
                   tasks={tasks}
                   onToggle={toggleTask}
                   onDelete={deleteTask}
+                  onUpdate={updateTask}
                   onReorder={reorderTasks}
                 />
               </div>
