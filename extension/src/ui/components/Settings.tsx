@@ -15,6 +15,30 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
   const [loading, setLoading] = useState(true);
   const domainsRef = useRef<HTMLDivElement>(null);
 
+  // Helper to format time display for settings
+  const formatTimeDisplay = (minutes: number): string => {
+    if (minutes < 1) {
+      // Less than 1 minute: show as seconds
+      const seconds = minutes * 60;
+      const rounded = Math.round(seconds * 10) / 10;
+      if (rounded % 1 === 0) {
+        return `${Math.floor(rounded)} seconds`;
+      } else {
+        return `${rounded} seconds`;
+      }
+    } else {
+      // 1 minute or more: show as X minutes Y seconds format
+      const wholeMinutes = Math.floor(minutes);
+      const seconds = Math.round((minutes - wholeMinutes) * 60);
+      
+      if (seconds === 0) {
+        return `${wholeMinutes} minute${wholeMinutes !== 1 ? 's' : ''}`;
+      } else {
+        return `${wholeMinutes} minute${wholeMinutes !== 1 ? 's' : ''} ${seconds} second${seconds !== 1 ? 's' : ''}`;
+      }
+    }
+  };
+
   useEffect(() => {
     loadSettings();
   }, []);
@@ -227,7 +251,7 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
               className="w-32 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Currently: {settings.snoozeMinutes < 1 ? `${settings.snoozeMinutes * 60} seconds` : `${settings.snoozeMinutes} minutes`}
+              Currently: {formatTimeDisplay(settings.snoozeMinutes)}
             </p>
           </div>
           <div>
@@ -243,7 +267,7 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
               className="w-32 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Currently: {settings.dismissMinutes} minutes
+              Currently: {formatTimeDisplay(settings.dismissMinutes)}
             </p>
           </div>
         </div>

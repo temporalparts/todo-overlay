@@ -21,6 +21,26 @@ export default function App({ onSnooze }: AppProps) {
   const [isDark, setIsDark] = useState(false);
   const currentDomain = getRootDomain(window.location.href);
 
+  // Helper to format time display
+  const formatTime = (minutes: number): string => {
+    if (minutes < 1) {
+      // Less than 1 minute: show seconds with up to 1 decimal place
+      const seconds = minutes * 60;
+      const rounded = Math.round(seconds * 10) / 10;
+      return rounded % 1 === 0 ? `${Math.floor(rounded)}s` : `${rounded}s`;
+    } else {
+      // 1 minute or more: show as XmYs format
+      const wholeMinutes = Math.floor(minutes);
+      const seconds = Math.round((minutes - wholeMinutes) * 60);
+      
+      if (seconds === 0) {
+        return `${wholeMinutes}m`;
+      } else {
+        return `${wholeMinutes}m${seconds}s`;
+      }
+    }
+  };
+
   useEffect(() => {
     loadInitialData();
     
@@ -112,7 +132,7 @@ export default function App({ onSnooze }: AppProps) {
   const handleSnooze = () => {
     console.log('[TABULA App] Snooze button clicked');
     try {
-      const minutes = settings?.snoozeMinutes || 0.25;
+      const minutes = settings?.snoozeMinutes || 15;
       onSnooze(minutes);
     } catch (error) {
       console.error('[TABULA App] Error calling onSnooze:', error);
@@ -122,7 +142,7 @@ export default function App({ onSnooze }: AppProps) {
   const handleDismiss = () => {
     console.log('[TABULA App] Dismiss button clicked');
     try {
-      const minutes = settings?.dismissMinutes || 1;
+      const minutes = settings?.dismissMinutes || 60;
       onSnooze(minutes);
     } catch (error) {
       console.error('[TABULA App] Error calling onSnooze:', error);
@@ -168,18 +188,16 @@ export default function App({ onSnooze }: AppProps) {
               <button
                 onClick={handleSnooze}
                 className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors"
-                title={`Snooze for ${settings?.snoozeMinutes || 0.25} minutes`}
+                title={`Snooze for ${settings?.snoozeMinutes || 15} minutes`}
               >
-                Snooze {settings?.snoozeMinutes && settings.snoozeMinutes < 1 
-                  ? `${settings.snoozeMinutes * 60}s` 
-                  : `${settings?.snoozeMinutes || 0.25}m`}
+                Snooze ({formatTime(settings?.snoozeMinutes || 15)})
               </button>
               <button
                 onClick={handleDismiss}
                 className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors"
-                title={`Dismiss for ${settings?.dismissMinutes || 1} minutes`}
+                title={`Dismiss for ${settings?.dismissMinutes || 60} minutes`}
               >
-                Dismiss {settings?.dismissMinutes || 1}m
+                Dismiss ({formatTime(settings?.dismissMinutes || 60)})
               </button>
             </div>
           </div>

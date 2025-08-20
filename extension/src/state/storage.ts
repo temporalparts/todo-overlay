@@ -6,8 +6,8 @@ const DEFAULT_SETTINGS: Settings = {
   domains: ['reddit.com', 'x.com', 'youtube.com'],
   theme: 'auto',
   autoOpenOnAllowlisted: true,
-  snoozeMinutes: 0.25, // 15 seconds for testing
-  dismissMinutes: 1 // 1 minute for testing
+  snoozeMinutes: 15, // 15 minutes default
+  dismissMinutes: 60 // 60 minutes default
 };
 
 // Tasks storage (using chrome.storage.local for more space)
