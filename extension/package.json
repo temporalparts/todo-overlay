@@ -1,7 +1,7 @@
 {
-  "name": "nudgenotes",
-  "version": "0.1.10",
-  "description": "A minimalist TODO overlay that nudges you on distractor sites",
+  "name": "tabula",
+  "version": "0.1.15",
+  "description": "TABULA - Take Back Your Life Again. A focused task manager for reclaiming your time.",
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",

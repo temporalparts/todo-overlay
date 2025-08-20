@@ -26,11 +26,11 @@ export default function App({ onSnooze }: AppProps) {
     const handleStorageChange = (changes: any, areaName: string) => {
       if (areaName === 'local') {
         if (changes.tasks) {
-          console.log('[NudgeNotes] Tasks updated from another tab');
+          console.log('[TABULA] Tasks updated from another tab');
           setTasks(changes.tasks.newValue || []);
         }
         if (changes.settings) {
-          console.log('[NudgeNotes] Settings updated from another tab');
+          console.log('[TABULA] Settings updated from another tab');
           setSettings(changes.settings.newValue || null);
         }
       }
@@ -81,22 +81,22 @@ export default function App({ onSnooze }: AppProps) {
   };
 
   const handleSnooze = () => {
-    console.log('[NudgeNotes App] Snooze button clicked');
+    console.log('[TABULA App] Snooze button clicked');
     try {
       const minutes = settings?.snoozeMinutes || 0.25;
       onSnooze(minutes);
     } catch (error) {
-      console.error('[NudgeNotes App] Error calling onSnooze:', error);
+      console.error('[TABULA App] Error calling onSnooze:', error);
     }
   };
 
   const handleDismiss = () => {
-    console.log('[NudgeNotes App] Dismiss button clicked');
+    console.log('[TABULA App] Dismiss button clicked');
     try {
       const minutes = settings?.dismissMinutes || 1;
       onSnooze(minutes);
     } catch (error) {
-      console.error('[NudgeNotes App] Error calling onSnooze:', error);
+      console.error('[TABULA App] Error calling onSnooze:', error);
     }
   };
 
@@ -118,9 +118,14 @@ export default function App({ onSnooze }: AppProps) {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-bold">NudgeNotes</h1>
+              <div>
+                <h1 className="text-3xl font-bold">TABULA</h1>
+                <p className="text-xs text-white/80 tracking-wider">
+                  <span className="font-bold">TA</span>ke <span className="font-bold">B</span>ack <span className="font-bold">YOUR</span> <span className="underline font-bold">L</span><span className="underline">ife</span> <span className="font-bold">A</span>gain
+                </p>
+              </div>
               <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
-                Blocked: {currentDomain}
+                URL matches: {currentDomain}
               </span>
             </div>
             <div className="flex gap-3">
@@ -143,7 +148,7 @@ export default function App({ onSnooze }: AppProps) {
             </div>
           </div>
           <p className="text-white/80">
-            Take a moment to review your tasks before proceeding to {currentDomain}
+            Your time is valuable. Consider your priorities prior to giving your time to {currentDomain}.
           </p>
         </div>
       </div>
@@ -211,10 +216,10 @@ export default function App({ onSnooze }: AppProps) {
       <div className="bg-gray-100 dark:bg-zinc-800 border-t border-gray-200 dark:border-zinc-700 p-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
           <span>
-            {tasks.filter(t => !t.completed).length} active tasks remaining
+            {tasks.filter(t => !t.completed).length} tasks to reclaim your day
           </span>
           <span>
-            Stay focused and productive!
+            Every moment counts. Take back your life!
           </span>
         </div>
       </div>

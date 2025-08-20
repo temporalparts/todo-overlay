@@ -15,7 +15,7 @@ export default function Settings() {
     // Listen for storage changes from other tabs
     const handleStorageChange = (changes: any, areaName: string) => {
       if (areaName === 'local' && changes.settings) {
-        console.log('[NudgeNotes Settings] Settings updated from another tab');
+        console.log('[TABULA Settings] Settings updated from another tab');
         setSettings(changes.settings.newValue || null);
       }
     };

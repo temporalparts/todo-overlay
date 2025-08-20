@@ -1,6 +1,6 @@
-# NudgeNotes
+# TABULA - Take Back Your Life Again
 
-A Chrome extension that helps you stay focused by overlaying a TODO list on distracting websites.
+A powerful Chrome extension that helps you reclaim your time and focus by transforming distractions into opportunities for productivity.
 
 ## Getting Started
 

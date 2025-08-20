@@ -1,12 +1,12 @@
-# NudgeNotes - TODO Overlay Chrome Extension
+# TABULA - Take Back Your Life Again
 
-A minimalist TODO overlay that nudges you on distractor sites. Stay focused with gentle reminders of your tasks.
+A powerful Chrome extension that transforms digital distractions into productivity moments. TABULA helps you reclaim your time by presenting your priorities when you need them most.
 
 ## Features (MVP)
 
 ✅ **Dynamic Task List** - Add, complete, and delete tasks
 ✅ **Beautiful UI** - Clean, modern interface with Tailwind CSS  
-✅ **Domain Detection** - Auto-shows on configured domains (reddit.com, twitter.com, youtube.com by default)
+✅ **Domain Detection** - Auto-shows on configured domains (reddit.com, x.com, youtube.com by default)
 ✅ **Snooze/Dismiss** - Snooze for 5 minutes or dismiss for 60 minutes
 ✅ **Settings Page** - Configure allowed domains and behavior
 ✅ **Dark Mode** - Automatic theme detection
@@ -28,9 +28,9 @@ npm run build
    - Select the `extension/dist` folder
 
 3. Test it:
-   - Navigate to reddit.com, twitter.com, or youtube.com
-   - The overlay should appear automatically
-   - Click the extension icon to open on any site
+   - Navigate to reddit.com, x.com, or youtube.com
+   - TABULA will appear automatically, presenting your tasks
+   - Click the extension icon to activate TABULA on any site
 
 ## Usage
 
@@ -39,11 +39,11 @@ npm run build
 - **Complete Task**: Click the checkbox
 - **Delete Task**: Hover over task and click the trash icon
 
-### Overlay Control
-- **Snooze 5m**: Temporarily hide for 5 minutes on this domain
-- **Dismiss 60m**: Hide for 60 minutes on this domain  
-- **Close (X)**: Close without snoozing (when opened via icon)
-- **Click Outside**: Same as Snooze 5m
+### Taking Back Control
+- **Snooze**: Brief pause to handle urgent matters
+- **Dismiss**: Longer break when you've earned it
+- **Settings Tab**: Customize your time reclamation strategy
+- **Real-time Sync**: All tabs stay synchronized
 
 ### Settings
 - Click the extension icon → Settings
@@ -66,11 +66,12 @@ npm run build
 npm run typecheck
 ```
 
-## Privacy
+## Your Data, Your Control
 
-✅ **No data collection** - All data stored locally
-✅ **No external requests** - Completely offline
-✅ **No analytics** - Your privacy is respected
+✅ **100% Local** - Your tasks never leave your device
+✅ **No Tracking** - TABULA respects your privacy completely
+✅ **Offline First** - Works without internet connection
+✅ **Export Anytime** - Your data is always yours
 
 ## Future Features
 

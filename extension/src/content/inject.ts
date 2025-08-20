@@ -24,32 +24,38 @@ class OverlayManager {
   }
 
   async shouldShowOverlay(): Promise<boolean> {
-    const settings = await getSettings();
-    if (!settings.autoOpenOnAllowlisted) return false;
-    
-    const currentUrl = window.location.href;
-    if (!isUrlInDomainList(currentUrl, settings.domains)) return false;
-    
-    const domain = getRootDomain(currentUrl);
-    const isSnoozed = await isdomainSnoozed(domain);
-    return !isSnoozed;
+    try {
+      const settings = await getSettings();
+      if (!settings.autoOpenOnAllowlisted) return false;
+      
+      const currentUrl = window.location.href;
+      if (!isUrlInDomainList(currentUrl, settings.domains)) return false;
+      
+      const domain = getRootDomain(currentUrl);
+      const isSnoozed = await isdomainSnoozed(domain);
+      return !isSnoozed;
+    } catch (error) {
+      // If extension context is invalidated, don't show overlay
+      console.log('[TABULA] Error checking if should show overlay:', error);
+      return false;
+    }
   }
 
   async createOverlay() {
     // If overlay already exists, just return
     if (this.overlayRoot) {
-      console.log('[NudgeNotes] Overlay already exists, not creating another');
+      console.log('[TABULA] Overlay already exists, not creating another');
       return;
     }
 
-    console.log('[NudgeNotes] Creating overlay...');
+    console.log('[TABULA] Creating overlay...');
     
     // Wait for body to be available
     await this.waitForBody();
     
     // Create container that takes over entire viewport
     this.overlayRoot = document.createElement('div');
-    this.overlayRoot.id = 'nudgenotes-overlay';
+    this.overlayRoot.id = 'tabula-overlay';
     this.overlayRoot.style.cssText = 'position: fixed; inset: 0; z-index: 2147483647;'; // Max z-index
     
     // Create shadow DOM to isolate styles
@@ -65,7 +71,7 @@ class OverlayManager {
       styleEl.textContent = cssText;
       this.shadowRoot.appendChild(styleEl);
     } catch (error) {
-      console.error('[NudgeNotes] Failed to load styles:', error);
+      console.error('[TABULA] Failed to load styles:', error);
     }
     
     // Create app container
@@ -82,7 +88,7 @@ class OverlayManager {
     
     // Final safety check before appending
     if (!document.body) {
-      console.error('[NudgeNotes] document.body is still null after wait, aborting overlay creation');
+      console.error('[TABULA] document.body is still null after wait, aborting overlay creation');
       this.overlayRoot = null;
       this.shadowRoot = null;
       return;
@@ -141,7 +147,7 @@ class OverlayManager {
   }
 
   closeOverlay() {
-    console.log('[NudgeNotes] Closing overlay');
+    console.log('[TABULA] Closing overlay');
     if (this.overlayRoot) {
       this.overlayRoot.remove();
       this.overlayRoot = null;
@@ -150,13 +156,13 @@ class OverlayManager {
   }
 
   async handleSnooze(minutes: number) {
-    console.log(`[NudgeNotes] handleSnooze called with ${minutes} minutes`);
+    console.log(`[TABULA] handleSnooze called with ${minutes} minutes`);
     const domain = getRootDomain(window.location.href);
     
     try {
       // Check if runtime is still connected
       if (!browser.runtime?.id) {
-        console.error('[NudgeNotes] Extension runtime disconnected, reloading page...');
+        console.error('[TABULA] Extension runtime disconnected, reloading page...');
         window.location.reload();
         return;
       }
@@ -168,22 +174,22 @@ class OverlayManager {
         minutes
       });
       
-      console.log('[NudgeNotes] Snooze response:', response);
+      console.log('[TABULA] Snooze response:', response);
       
       if (response && response.success) {
         this.closeOverlay();
       } else {
-        console.error('[NudgeNotes] Snooze failed, response:', response);
+        console.error('[TABULA] Snooze failed, response:', response);
         // Still close overlay to not leave user stuck
         this.closeOverlay();
       }
     } catch (error) {
-      console.error('[NudgeNotes] Error sending snooze message:', error);
+      console.error('[TABULA] Error sending snooze message:', error);
       
       // Check if it's a disconnection error
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (errorMessage.includes('Extension context invalidated')) {
-        console.error('[NudgeNotes] Extension was reloaded/updated. Refreshing page...');
+        console.error('[TABULA] Extension was reloaded/updated. Refreshing page...');
         window.location.reload();
       } else {
         // Try to close overlay anyway to not leave user stuck
@@ -193,49 +199,74 @@ class OverlayManager {
   }
 
   async initialize() {
-    // Check if we should show on page load
-    console.log('[NudgeNotes] Initializing overlay manager...');
-    
-    const shouldShow = await this.shouldShowOverlay();
-    console.log('[NudgeNotes] Should show overlay?', shouldShow);
-    
-    if (shouldShow) {
-      await this.createOverlay();
+    try {
+      // Check if we should show on page load
+      console.log('[TABULA] Initializing overlay manager...');
+      
+      // Check if extension context is still valid
+      if (!browser.runtime?.id) {
+        console.log('[TABULA] Extension context not available, skipping initialization');
+        return;
+      }
+      
+      const shouldShow = await this.shouldShowOverlay();
+      console.log('[TABULA] Should show overlay?', shouldShow);
+      
+      if (shouldShow) {
+        await this.createOverlay();
+      }
+    } catch (error) {
+      console.log('[TABULA] Error during initialization:', error);
+      // Don't throw, just log - page will work normally without overlay
     }
   }
 }
 
 // Check if already injected (for duplicate script prevention)
-if ((window as any).__nudgeNotesInjected) {
-  console.log('[NudgeNotes] Already injected, exiting...');
+if ((window as any).__tabulaInjected) {
+  console.log('[TABULA] Already injected, exiting...');
 } else {
-  (window as any).__nudgeNotesInjected = true;
+  (window as any).__tabulaInjected = true;
   
   // Get singleton instance
   const overlayManager = OverlayManager.getInstance();
 
   // Listen for messages from popup/background
-  browser.runtime.onMessage.addListener(async (message) => {
-    if (message.type === 'PING') {
-      // Just respond to indicate content script is loaded
-      return { status: 'ok' };
-    } else if (message.type === 'OPEN_OVERLAY') {
-      await overlayManager.createOverlay();
-    } else if (message.type === 'CLOSE_OVERLAY') {
-      overlayManager.closeOverlay();
-    } else if (message.type === 'SNOOZE_EXPIRED') {
-      console.log('[NudgeNotes] Snooze expired notification received');
-      // Check if we should show overlay (user might have navigated away)
-      const currentDomain = getRootDomain(window.location.href);
-      if (currentDomain === message.domain && await overlayManager.shouldShowOverlay()) {
+  const messageHandler = async (message: any) => {
+    try {
+      if (message.type === 'PING') {
+        // Just respond to indicate content script is loaded
+        return { status: 'ok' };
+      } else if (message.type === 'OPEN_OVERLAY') {
         await overlayManager.createOverlay();
+      } else if (message.type === 'CLOSE_OVERLAY') {
+        overlayManager.closeOverlay();
+      } else if (message.type === 'SNOOZE_EXPIRED') {
+        console.log('[TABULA] Snooze expired notification received');
+        // Check if we should show overlay (user might have navigated away)
+        const currentDomain = getRootDomain(window.location.href);
+        if (currentDomain === message.domain && await overlayManager.shouldShowOverlay()) {
+          await overlayManager.createOverlay();
+        }
+      }
+    } catch (error) {
+      console.log('[TABULA] Error handling message:', error);
+      // If extension context invalidated, don't try to use browser APIs anymore
+      if (error instanceof Error && error.message.includes('Extension context invalidated')) {
+        try {
+          browser.runtime.onMessage.removeListener(messageHandler);
+        } catch {
+          // Even removing the listener might fail if context is invalidated
+        }
       }
     }
     // Return true to indicate we'll send a response asynchronously
     return true;
-  });
+  };
+  
+  browser.runtime.onMessage.addListener(messageHandler);
 
   // Initialize on page load
-  console.log('[NudgeNotes] Content script loaded on:', window.location.href);
+  console.log('[TABULA] Content script loaded on:', window.location.href);
   overlayManager.initialize();
 }

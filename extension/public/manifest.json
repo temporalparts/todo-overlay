@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "NudgeNotes",
-  "version": "0.1.10",
-  "description": "A minimalist TODO overlay that nudges you on distractor sites. Snooze 5m, Dismiss 60m.",
+  "name": "TABULA",
+  "version": "0.1.15",
+  "description": "Take Back Your Life Again - A focused task manager that helps you reclaim your time from distraction.",
   "action": {
-    "default_title": "NudgeNotes - Click to open overlay",
+    "default_title": "TABULA - Take Back Your Life Again",
     "default_icon": {
       "16": "icon16.png",
       "48": "icon48.png",
