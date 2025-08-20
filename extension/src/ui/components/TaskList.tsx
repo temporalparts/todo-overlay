@@ -40,7 +40,8 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
     );
   }
 
-  // Sort active tasks by: 1) due date (earliest first, no date last), 2) priority (high>medium>low>none), 3) creation date (oldest first)
+  // Sort active tasks by: 1) due date (earliest first, no date last), 2) priority (high>medium>low>none)
+  // Uses stable sort to maintain relative order for ties
   const sortActiveTasks = (tasksToSort: Task[]) => {
     return [...tasksToSort].sort((a, b) => {
       // First, sort by due date
@@ -60,8 +61,8 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
       const priorityB = b.priority ? priorityOrder[b.priority] : 3;
       if (priorityA !== priorityB) return priorityA - priorityB;
       
-      // Finally, sort by creation date (oldest first)
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      // For ties, maintain current order (stable sort)
+      return 0;
     });
   };
 
