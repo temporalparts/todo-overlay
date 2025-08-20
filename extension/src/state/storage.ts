@@ -8,8 +8,8 @@ const DEFAULT_SETTINGS: Settings = {
   autoOpenOnAllowlisted: true,
   snoozeMinutes: 15, // 15 minutes default
   dismissMinutes: 60, // 60 minutes default
-  enableQuoteRotation: false, // Disable quote rotation by default
-  quoteRotationSeconds: 20, // 20 seconds default
+  enableQuoteRotation: true, // Enable quote rotation by default
+  quoteRotationSeconds: 60, // 60 seconds default
   enablePlaceholderRotation: true // Enable placeholder rotation by default
 };
 
