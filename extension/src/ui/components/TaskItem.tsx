@@ -150,7 +150,7 @@ export default function TaskItem({
           submitLabel="Save"
           showCancel={true}
           autoFocus={true}
-          showTestDateOptions={true}
+          showTestDateOptions={false}
         />
       </div>
     );
