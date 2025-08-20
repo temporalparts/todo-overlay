@@ -143,7 +143,7 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
     setSettings(updatedSettings);
   };
 
-  const handleTimersUpdate = async (field: 'snoozeMinutes' | 'dismissMinutes', value: number) => {
+  const handleTimersUpdate = async (field: 'snoozeMinutes' | 'dismissMinutes' | 'quoteRotationSeconds', value: number) => {
     if (!settings) return;
     
     const updatedSettings = {
@@ -268,6 +268,22 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Currently: {formatTimeDisplay(settings.dismissMinutes)}
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Quote Display Duration (seconds)
+            </label>
+            <input
+              type="number"
+              min="5"
+              step="5"
+              value={settings.quoteRotationSeconds}
+              onChange={(e) => handleTimersUpdate('quoteRotationSeconds', parseInt(e.currentTarget.value) || 20)}
+              className="w-32 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Each quote displays for {settings.quoteRotationSeconds} seconds
             </p>
           </div>
         </div>

@@ -7,7 +7,8 @@ const DEFAULT_SETTINGS: Settings = {
   theme: 'auto',
   autoOpenOnAllowlisted: true,
   snoozeMinutes: 15, // 15 minutes default
-  dismissMinutes: 60 // 60 minutes default
+  dismissMinutes: 60, // 60 minutes default
+  quoteRotationSeconds: 20 // 20 seconds default
 };
 
 // Tasks storage (using chrome.storage.local for more space)
@@ -34,6 +35,9 @@ export async function getSettings(): Promise<Settings> {
   }
   if (settings.dismissMinutes === undefined) {
     settings.dismissMinutes = DEFAULT_SETTINGS.dismissMinutes;
+  }
+  if (settings.quoteRotationSeconds === undefined) {
+    settings.quoteRotationSeconds = DEFAULT_SETTINGS.quoteRotationSeconds;
   }
   
   return settings;

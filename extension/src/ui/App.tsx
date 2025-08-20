@@ -4,6 +4,7 @@ import browser from 'webextension-polyfill';
 import { Task, Settings as SettingsType } from '../types';
 import { getTasks, saveTasks, getSettings } from '../state/storage';
 import { getRootDomain } from '../lib/domain';
+import { getShuffledQuotes, Quote } from '../data/quotes';
 import TaskList from './components/TaskList';
 import AddTask from './components/AddTask';
 import Settings from './components/Settings';
@@ -19,6 +20,9 @@ export default function App({ onSnooze }: AppProps) {
   const [activeTab, setActiveTab] = useState<'tasks' | 'settings'>('tasks');
   const [scrollToDomains, setScrollToDomains] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [quotesArray, setQuotesArray] = useState<Quote[]>([]);
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const currentDomain = getRootDomain(window.location.href);
 
   // Helper to format time display
@@ -40,6 +44,45 @@ export default function App({ onSnooze }: AppProps) {
       }
     }
   };
+
+  // Initialize quotes on mount
+  useEffect(() => {
+    const shuffled = getShuffledQuotes();
+    // Find Mary Oliver quote and move it to the front
+    const maryOliverIndex = shuffled.findIndex(q => 
+      q.author === "Mary Oliver" && 
+      q.text.includes("Tell me, what is it you plan to do")
+    );
+    if (maryOliverIndex > 0) {
+      const maryOliverQuote = shuffled[maryOliverIndex];
+      shuffled.splice(maryOliverIndex, 1);
+      shuffled.unshift(maryOliverQuote);
+    }
+    setQuotesArray(shuffled);
+  }, []);
+
+  // Rotate quotes based on interval setting
+  useEffect(() => {
+    if (!settings || quotesArray.length === 0) return;
+    
+    const transitionDuration = 700; // Duration of the fade animation in ms
+    const interval = setInterval(() => {
+      // Start fade out
+      setIsTransitioning(true);
+      
+      // After fade out, change quote and fade in
+      setTimeout(() => {
+        setCurrentQuoteIndex((prev) => (prev + 1) % quotesArray.length);
+      }, 400);
+      
+      // Start fade in
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 450);
+    }, (settings.quoteRotationSeconds * 1000) + transitionDuration);
+    
+    return () => clearInterval(interval);
+  }, [settings?.quoteRotationSeconds, quotesArray.length]);
 
   useEffect(() => {
     loadInitialData();
@@ -272,9 +315,21 @@ export default function App({ onSnooze }: AppProps) {
           <span>
             {tasks.filter(t => !t.completed).length} tasks to reclaim your day
           </span>
-          <span>
-            Every moment counts. Take back your life!
-          </span>
+          {quotesArray.length > 0 && (
+            <div className="text-right flex-1 ml-4 relative overflow-hidden">
+              <div 
+                key={currentQuoteIndex}
+                className={`${
+                  isTransitioning 
+                    ? 'opacity-0 translate-y-3 transition-all duration-500' 
+                    : 'animate-slide-up-fade'
+                }`}
+              >
+                <span className="italic inline">"{quotesArray[currentQuoteIndex].text}" </span>
+                <span className="whitespace-nowrap inline">~{quotesArray[currentQuoteIndex].author}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

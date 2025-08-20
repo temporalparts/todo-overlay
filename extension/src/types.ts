@@ -13,6 +13,7 @@ export interface Settings {
   autoOpenOnAllowlisted: boolean;
   snoozeMinutes: number; // How long to snooze
   dismissMinutes: number; // How long to dismiss
+  quoteRotationSeconds: number; // How often to rotate quotes (in seconds)
 }
 
 export interface SnoozeState {

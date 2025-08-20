@@ -1,6 +1,6 @@
 {
   "name": "tabula",
-  "version": "0.1.45",
+  "version": "0.1.56",
   "description": "TABULA - Take Back Your Life Again. A focused task manager for reclaiming your time.",
   "type": "module",
   "scripts": {
@@ -12,7 +12,8 @@
     "version:minor": "node scripts/bump-version.js minor",
     "version:major": "node scripts/bump-version.js major",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src --ext .ts,.tsx",
+    "generate-quotes": "node scripts/generate-quotes.cjs"
   },
   "dependencies": {
     "@preact/signals": "^1.2.2",
