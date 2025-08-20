@@ -17,6 +17,7 @@ export default function App({ onSnooze }: AppProps) {
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'tasks' | 'settings'>('tasks');
+  const [isDark, setIsDark] = useState(false);
   const currentDomain = getRootDomain(window.location.href);
 
   useEffect(() => {
@@ -31,18 +32,32 @@ export default function App({ onSnooze }: AppProps) {
         }
         if (changes.settings) {
           console.log('[TABULA] Settings updated from another tab');
-          setSettings(changes.settings.newValue || null);
+          const newSettings = changes.settings.newValue;
+          setSettings(newSettings || null);
+          if (newSettings) {
+            applyTheme(newSettings.theme);
+          }
         }
       }
     };
     
-    browser.storage.onChanged.addListener(handleStorageChange);
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleThemeChange = (e: MediaQueryListEvent) => {
+      if (settings?.theme === 'auto') {
+        setIsDark(e.matches);
+      }
+    };
     
-    // Cleanup listener on unmount
+    browser.storage.onChanged.addListener(handleStorageChange);
+    mediaQuery.addEventListener('change', handleThemeChange);
+    
+    // Cleanup listeners on unmount
     return () => {
       browser.storage.onChanged.removeListener(handleStorageChange);
+      mediaQuery.removeEventListener('change', handleThemeChange);
     };
-  }, []);
+  }, [settings?.theme]);
 
   const loadInitialData = async () => {
     const [loadedTasks, loadedSettings] = await Promise.all([
@@ -51,7 +66,20 @@ export default function App({ onSnooze }: AppProps) {
     ]);
     setTasks(loadedTasks);
     setSettings(loadedSettings);
+    
+    // Apply theme
+    applyTheme(loadedSettings.theme);
+    
     setLoading(false);
+  };
+
+  const applyTheme = (theme: 'light' | 'dark' | 'auto') => {
+    if (theme === 'auto') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setIsDark(prefersDark);
+    } else {
+      setIsDark(theme === 'dark');
+    }
   };
 
   const addTask = async (title: string) => {
@@ -112,7 +140,7 @@ export default function App({ onSnooze }: AppProps) {
 
   // Full-screen takeover UI
   return (
-    <div className="fixed inset-0 bg-white dark:bg-zinc-950 flex flex-col h-screen w-screen overflow-hidden">
+    <div className={`fixed inset-0 bg-white dark:bg-zinc-950 flex flex-col h-screen w-screen overflow-hidden ${isDark ? 'dark' : ''}`}>
       {/* Header */}
       <div className="bg-indigo-600 dark:bg-indigo-700 text-white p-6 shadow-lg">
         <div className="max-w-4xl mx-auto">

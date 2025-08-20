@@ -83,6 +83,18 @@ export default function Settings() {
     setSettings(updatedSettings);
   };
 
+  const handleThemeChange = async (theme: 'light' | 'dark' | 'auto') => {
+    if (!settings) return;
+    
+    const updatedSettings = {
+      ...settings,
+      theme
+    };
+    
+    await saveSettings(updatedSettings);
+    setSettings(updatedSettings);
+  };
+
   const handleTimersUpdate = async (field: 'snoozeMinutes' | 'dismissMinutes', value: number) => {
     if (!settings) return;
     
@@ -107,6 +119,53 @@ export default function Settings() {
 
   return (
     <div className="space-y-6">
+      {/* Theme setting */}
+      <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Appearance
+        </h3>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Theme
+          </label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleThemeChange('light')}
+              className={`px-4 py-2 rounded-lg border ${
+                settings.theme === 'light'
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white dark:bg-zinc-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-zinc-600'
+              }`}
+            >
+              Light
+            </button>
+            <button
+              onClick={() => handleThemeChange('dark')}
+              className={`px-4 py-2 rounded-lg border ${
+                settings.theme === 'dark'
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white dark:bg-zinc-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-zinc-600'
+              }`}
+            >
+              Dark
+            </button>
+            <button
+              onClick={() => handleThemeChange('auto')}
+              className={`px-4 py-2 rounded-lg border ${
+                settings.theme === 'auto'
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white dark:bg-zinc-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-zinc-600'
+              }`}
+            >
+              Auto
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Auto follows your system theme preference
+          </p>
+        </div>
+      </div>
+
       {/* Auto-open setting */}
       <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">

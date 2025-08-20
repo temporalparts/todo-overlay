@@ -9,7 +9,7 @@ interface TaskItemProps {
 
 export default function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
   return (
-    <div className="group flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
+    <div className="group flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700/50 transition-colors">
       <button
         onClick={() => onToggle(task.id)}
         className={`flex-shrink-0 w-5 h-5 rounded border-2 transition-colors ${
