@@ -1,6 +1,6 @@
 {
   "name": "tabula",
-  "version": "0.1.127",
+  "version": "0.1.128",
   "description": "TABULA - Take Back Your Life Again. A focused task manager for reclaiming your time.",
   "type": "module",
   "scripts": {

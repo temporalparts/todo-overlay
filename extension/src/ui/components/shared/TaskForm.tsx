@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { Priority } from '../../../types';
 import PrioritySelector from './PrioritySelector';
 import DatePicker from './DatePicker';
@@ -36,6 +36,7 @@ export default function TaskForm({
   const [dueDate, setDueDate] = useState(initialDueDate);
   const [showError, setShowError] = useState(false);
   const [showOptions, setShowOptions] = useState(initialTitle.length > 0);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setShowOptions(title.length > 0);
@@ -58,6 +59,8 @@ export default function TaskForm({
       setDueDate(new Date().toISOString().split('T')[0]);
       setShowError(false);
       setShowOptions(false);
+      // Return focus to input after submission
+      inputRef.current?.focus();
     }
   };
 
@@ -98,6 +101,7 @@ export default function TaskForm({
       <div className="space-y-2">
         <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={title}
             onInput={(e) => handleInputChange((e.target as HTMLInputElement).value)}
