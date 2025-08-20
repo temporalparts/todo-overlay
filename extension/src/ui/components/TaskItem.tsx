@@ -28,7 +28,9 @@ export default function TaskItem({
     if (!priority) return {
       border: 'border-gray-300 dark:border-zinc-600',
       bg: 'bg-gray-400 dark:bg-gray-500',
-      hover: 'hover:border-gray-400 dark:hover:border-gray-500'
+      hover: 'hover:border-gray-400 dark:hover:border-gray-500',
+      gradient: 'bg-gradient-to-r from-gray-100 to-gray-50 dark:from-zinc-800/70 dark:to-zinc-800/30',
+      hoverGradient: 'hover:from-gray-200 hover:to-gray-100 dark:hover:from-zinc-700/70 dark:hover:to-zinc-700/30'
     };
     
     switch(priority) {
@@ -36,19 +38,25 @@ export default function TaskItem({
         return {
           border: 'border-red-500 dark:border-red-400',
           bg: 'bg-red-500 dark:bg-red-400',
-          hover: 'hover:border-red-600 dark:hover:border-red-300'
+          hover: 'hover:border-red-600 dark:hover:border-red-300',
+          gradient: 'bg-gradient-to-r from-red-100 to-gray-50 dark:from-red-900/30 dark:to-zinc-800/30',
+          hoverGradient: 'hover:from-red-200 hover:to-gray-100 dark:hover:from-red-900/40 dark:hover:to-zinc-700/30'
         };
       case 'medium':
         return {
           border: 'border-yellow-500 dark:border-yellow-400',
           bg: 'bg-yellow-500 dark:bg-yellow-400',
-          hover: 'hover:border-yellow-600 dark:hover:border-yellow-300'
+          hover: 'hover:border-yellow-600 dark:hover:border-yellow-300',
+          gradient: 'bg-gradient-to-r from-yellow-100 to-gray-50 dark:from-yellow-900/30 dark:to-zinc-800/30',
+          hoverGradient: 'hover:from-yellow-200 hover:to-gray-100 dark:hover:from-yellow-900/40 dark:hover:to-zinc-700/30'
         };
       case 'low':
         return {
           border: 'border-blue-500 dark:border-blue-400',
           bg: 'bg-blue-500 dark:bg-blue-400',
-          hover: 'hover:border-blue-600 dark:hover:border-blue-300'
+          hover: 'hover:border-blue-600 dark:hover:border-blue-300',
+          gradient: 'bg-gradient-to-r from-blue-100 to-gray-50 dark:from-blue-900/30 dark:to-zinc-800/30',
+          hoverGradient: 'hover:from-blue-200 hover:to-gray-100 dark:hover:from-blue-900/40 dark:hover:to-zinc-700/30'
         };
     }
   };
@@ -149,7 +157,7 @@ export default function TaskItem({
   }
   
   return (
-    <div className="group flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700/50 transition-colors">
+    <div className={`group flex items-center gap-3 p-3 rounded-lg transition-all ${priorityColors.gradient} ${priorityColors.hoverGradient}`}>
       <button
         onClick={() => onToggle(task.id)}
         className={`flex-shrink-0 w-5 h-5 rounded border-2 transition-colors ${
@@ -174,14 +182,36 @@ export default function TaskItem({
           }`}>
             {task.title}
           </span>
-          {task.completed && formatDueDate(task.dueDate, task.completed) && (
-            <span className="flex-shrink-0">
+          {task.completed && (formatDueDate(task.dueDate, task.completed) || task.priority) && (
+            <span className="flex-shrink-0 flex items-center gap-2">
+              {task.priority && (
+                <span className={`text-xs font-medium ${
+                  task.priority === 'high' 
+                    ? 'text-red-500 dark:text-red-400' 
+                    : task.priority === 'medium'
+                    ? 'text-yellow-600 dark:text-yellow-400'
+                    : 'text-blue-500 dark:text-blue-400'
+                }`}>
+                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                </span>
+              )}
               {formatDueDate(task.dueDate, task.completed)}
             </span>
           )}
         </div>
-        {!task.completed && formatDueDate(task.dueDate, task.completed) && (
-          <div className="mt-1">
+        {!task.completed && (formatDueDate(task.dueDate, task.completed) || task.priority) && (
+          <div className="mt-1 flex items-center gap-2">
+            {task.priority && (
+              <span className={`text-xs font-medium ${
+                task.priority === 'high' 
+                  ? 'text-red-600 dark:text-red-400' 
+                  : task.priority === 'medium'
+                  ? 'text-yellow-600 dark:text-yellow-400'
+                  : 'text-blue-600 dark:text-blue-400'
+              }`}>
+                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+              </span>
+            )}
             {formatDueDate(task.dueDate, task.completed)}
           </div>
         )}
