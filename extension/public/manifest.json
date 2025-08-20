@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TABULA",
-  "version": "0.1.72",
+  "version": "0.1.73",
   "description": "Take Back Your Life Again - A focused task manager that helps you reclaim your time from distraction.",
   "action": {
     "default_title": "TABULA - Take Back Your Life Again",

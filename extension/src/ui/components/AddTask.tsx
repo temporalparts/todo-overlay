@@ -40,6 +40,9 @@ export default function AddTask({ onAdd }: AddTaskProps) {
   useEffect(() => {
     if (!settings) return;
     
+    // Pause the animation if there's text in the input
+    if (title.length > 0) return;
+    
     // Add initial delay before starting to type
     if (charIndex === 0 && isTyping && currentPlaceholderIndex === 0 && placeholder === '') {
       const timeout = setTimeout(() => {
@@ -84,7 +87,7 @@ export default function AddTask({ onAdd }: AddTaskProps) {
         setCharIndex(0);
       }
     }
-  }, [charIndex, isTyping, currentPlaceholderIndex, settings]);
+  }, [charIndex, isTyping, currentPlaceholderIndex, settings, title]);
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
