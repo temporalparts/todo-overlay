@@ -58,6 +58,15 @@ class OverlayManager {
     this.overlayRoot.id = 'tabula-overlay';
     this.overlayRoot.style.cssText = 'position: fixed; inset: 0; z-index: 2147483647;'; // Max z-index
     
+    // Prevent scroll events from reaching the underlying page
+    this.overlayRoot.addEventListener('wheel', (e) => {
+      e.stopPropagation();
+    }, { passive: false });
+    
+    this.overlayRoot.addEventListener('touchmove', (e) => {
+      e.stopPropagation();
+    }, { passive: false });
+    
     // Create shadow DOM to isolate styles
     this.shadowRoot = this.overlayRoot.attachShadow({ mode: 'open' });
     
@@ -95,6 +104,9 @@ class OverlayManager {
     }
     
     document.body.appendChild(this.overlayRoot);
+    
+    // Disable scrolling on the body when overlay is shown
+    document.body.style.overflow = 'hidden';
   }
 
   private waitForBody(): Promise<void> {
@@ -152,6 +164,9 @@ class OverlayManager {
       this.overlayRoot.remove();
       this.overlayRoot = null;
       this.shadowRoot = null;
+      
+      // Re-enable scrolling on the body
+      document.body.style.overflow = '';
     }
   }
 
