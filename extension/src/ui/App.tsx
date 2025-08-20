@@ -347,45 +347,53 @@ export default function App({ onSnooze }: AppProps) {
       )}
       
       {/* Header */}
-      <div className="bg-indigo-600 dark:bg-indigo-700 text-white p-6 shadow-lg">
+      <div className="bg-indigo-600 dark:bg-indigo-700 text-white p-4 md:p-6 shadow-lg">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
+          {/* Mobile: Stack everything vertically */}
+          {/* Desktop: Original horizontal layout */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            {/* Left side - Logo, tagline, and URL label */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div>
                 <h1 className="text-5xl font-light tracking-tight">tabula</h1>
                 <p className="text-xs text-white/80 tracking-wider">
                   <span className="underline">ta</span>ke <span className="underline">b</span>ack <span className="italic underline font-dramatic tracking-wide text-sm">your</span> <span className="underline">L</span>ife <span className="underline">a</span>gain
                 </p>
               </div>
+              {/* URL matches label */}
               <button
                 onClick={() => {
                   setActiveTab('settings');
                   setScrollToDomains(true);
                 }}
-                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-sm transition-colors cursor-pointer"
+                className="self-start sm:self-auto px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs transition-colors cursor-pointer whitespace-nowrap"
                 title="Click to manage enabled domains"
               >
-                URL matches: {currentDomain}
+                URL matches: <span className="font-mono">{currentDomain}</span>
               </button>
             </div>
-            <div className="flex gap-3">
+            
+            {/* Right side - Action buttons */}
+            <div className="flex gap-2">
               <button
                 onClick={handleSnooze}
-                className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors"
+                className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
                 title={`Snooze for ${settings?.snoozeMinutes || 15} minutes`}
               >
-                Snooze ({formatTime(settings?.snoozeMinutes || 15)})
+                <span className="hidden xs:inline">Snooze </span>
+                <span>{formatTime(settings?.snoozeMinutes || 15)}</span>
               </button>
               <button
                 onClick={handleDismiss}
-                className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors"
+                className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
                 title={`Dismiss for ${settings?.dismissMinutes || 60} minutes`}
               >
-                Dismiss ({formatTime(settings?.dismissMinutes || 60)})
+                <span className="hidden xs:inline">Dismiss </span>
+                <span>{formatTime(settings?.dismissMinutes || 60)}</span>
               </button>
             </div>
           </div>
-          <p className="text-white/80">
+          <p className="text-white/80 mt-3 text-sm md:text-base">
             Your life is precious. Consider before gifting your time to <span className="font-mono">
               {(() => {
                 const lowerDomain = currentDomain.toLowerCase();
