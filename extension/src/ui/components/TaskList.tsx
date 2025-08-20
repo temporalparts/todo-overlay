@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Task } from '../../types';
 import TaskItem from './TaskItem';
 
@@ -15,8 +15,20 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [draggedOverTask, setDraggedOverTask] = useState<Task | null>(null);
   const [tempActiveTasks, setTempActiveTasks] = useState<Task[]>([]);
+  const [tempOverdueTasks, setTempOverdueTasks] = useState<Task[]>([]);
+  const [dragSection, setDragSection] = useState<'past' | 'present' | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [showOverdue, setShowOverdue] = useState(() => {
+    // Load saved state from localStorage
+    const saved = localStorage.getItem('tabula_showOverdue');
+    return saved !== null ? JSON.parse(saved) : false; // Default to collapsed
+  });
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  // Save overdue section state when it changes
+  useEffect(() => {
+    localStorage.setItem('tabula_showOverdue', JSON.stringify(showOverdue));
+  }, [showOverdue]);
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12">
@@ -53,9 +65,35 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
     });
   };
 
-  const baseActiveTasks = tasks.filter(t => !t.completed);
+  // Check if a task is overdue
+  const isOverdue = (task: Task) => {
+    if (!task.dueDate || task.completed) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(task.dueDate + 'T00:00:00');
+    return dueDate < today;
+  };
+
+  const baseActiveTasks = tasks.filter(t => !t.completed && !isOverdue(t));
+  const baseOverdueTasks = tasks.filter(t => !t.completed && isOverdue(t));
   const unsortedCompletedTasks = tasks.filter(t => t.completed);
   
+  // Sort overdue tasks by how overdue they are (most overdue first), then by priority
+  const sortedOverdueTasks = [...baseOverdueTasks].sort((a, b) => {
+    // First, sort by due date (oldest first = most overdue)
+    if (a.dueDate && b.dueDate) {
+      const dateA = new Date(a.dueDate + 'T00:00:00').getTime();
+      const dateB = new Date(b.dueDate + 'T00:00:00').getTime();
+      if (dateA !== dateB) return dateA - dateB;
+    }
+    
+    // Then sort by priority
+    const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+    const priorityA = a.priority ? priorityOrder[a.priority] : 3;
+    const priorityB = b.priority ? priorityOrder[b.priority] : 3;
+    return priorityA - priorityB;
+  });
+
   // Sort completed tasks by completion date descending (newest first), then priority descending (high > medium > low)
   const completedTasks = [...unsortedCompletedTasks].sort((a, b) => {
     // First sort by completion date
@@ -72,45 +110,106 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
   
   // Use temporary order during drag, otherwise use base order
   const activeTasks = draggedTask && tempActiveTasks.length > 0 ? tempActiveTasks : baseActiveTasks;
+  const overdueTasks = draggedTask && tempOverdueTasks.length > 0 ? tempOverdueTasks : sortedOverdueTasks;
   
   // Check if tasks are currently sorted
-  const checkIfSorted = () => {
-    if (baseActiveTasks.length <= 1) return true; // 0 or 1 tasks are always sorted
+  const checkIfSorted = (taskList: Task[]) => {
+    if (taskList.length <= 1) return true; // 0 or 1 tasks are always sorted
     
     // Create a sorted version
-    const sorted = sortActiveTasks([...baseActiveTasks]);
+    const sorted = sortActiveTasks([...taskList]);
     
     // Compare the IDs in order
-    for (let i = 0; i < baseActiveTasks.length; i++) {
-      if (sorted[i].id !== baseActiveTasks[i].id) {
+    for (let i = 0; i < taskList.length; i++) {
+      if (sorted[i].id !== taskList[i].id) {
         return false;
       }
     }
     return true;
   };
   
-  const isSorted = checkIfSorted();
+  const isPresentSorted = checkIfSorted(baseActiveTasks);
+  const isPastSorted = checkIfSorted(sortedOverdueTasks);
 
-  const handleDragStart = (e: DragEvent, task: Task) => {
+  const handleDragStart = (e: DragEvent, task: Task, section: 'past' | 'present') => {
     setDraggedTask(task);
-    setTempActiveTasks([...baseActiveTasks]);
+    setDragSection(section);
+    if (section === 'present') {
+      setTempActiveTasks([...baseActiveTasks]);
+      setTempOverdueTasks([...sortedOverdueTasks]);
+    } else {
+      // When dragging from past, initialize both temp arrays for potential cross-section drop
+      setTempOverdueTasks([...sortedOverdueTasks]);
+      setTempActiveTasks([...baseActiveTasks]);
+    }
     e.dataTransfer!.effectAllowed = 'move';
     e.dataTransfer!.setData('text/html', ''); // Firefox requires this
   };
 
-  const handleDragEnter = (e: DragEvent, task: Task) => {
-    if (!draggedTask || draggedTask.id === task.id) return;
+  const handleDragEnter = (e: DragEvent, task: Task | null, section: 'past' | 'present') => {
+    if (!draggedTask || (task && draggedTask.id === task.id)) return;
     
-    const draggedIndex = tempActiveTasks.findIndex(t => t.id === draggedTask.id);
-    const targetIndex = tempActiveTasks.findIndex(t => t.id === task.id);
-    
-    if (draggedIndex === -1 || targetIndex === -1) return;
-    
-    const newTasks = [...tempActiveTasks];
-    newTasks.splice(draggedIndex, 1);
-    newTasks.splice(targetIndex, 0, draggedTask);
-    
-    setTempActiveTasks(newTasks);
+    // Allow dragging from past to present (but not present to past)
+    if (dragSection === 'past' && section === 'present') {
+      // Moving from past to present - will update date to today
+      const draggedIndex = tempActiveTasks.findIndex(t => t.id === draggedTask.id);
+      
+      // If target task is null (empty present section), or target doesn't exist, add to end
+      const targetIndex = task ? tempActiveTasks.findIndex(t => t.id === task.id) : -1;
+      
+      const newTasks = [...tempActiveTasks];
+      // If dragged task is not yet in present section, add it
+      if (draggedIndex === -1) {
+        // Insert the dragged task with today's date
+        const updatedTask = { ...draggedTask, dueDate: new Date().toISOString().split('T')[0] };
+        if (targetIndex === -1) {
+          // Add to end if no target (empty section or dragging to empty area)
+          newTasks.push(updatedTask);
+        } else {
+          // Insert at target position
+          newTasks.splice(targetIndex, 0, updatedTask);
+        }
+        // Remove from past section
+        const newOverdueTasks = tempOverdueTasks.filter(t => t.id !== draggedTask.id);
+        setTempOverdueTasks(newOverdueTasks);
+      } else {
+        // Already in present, just reorder
+        newTasks.splice(draggedIndex, 1);
+        const updatedTask = { ...draggedTask, dueDate: new Date().toISOString().split('T')[0] };
+        if (targetIndex === -1) {
+          newTasks.push(updatedTask);
+        } else {
+          newTasks.splice(targetIndex, 0, updatedTask);
+        }
+      }
+      
+      setTempActiveTasks(newTasks);
+    } else if (dragSection === section) {
+      // Same section reordering (only if we have a target task)
+      if (section === 'present' && task) {
+        const draggedIndex = tempActiveTasks.findIndex(t => t.id === draggedTask.id);
+        const targetIndex = tempActiveTasks.findIndex(t => t.id === task.id);
+        
+        if (draggedIndex === -1 || targetIndex === -1) return;
+        
+        const newTasks = [...tempActiveTasks];
+        newTasks.splice(draggedIndex, 1);
+        newTasks.splice(targetIndex, 0, draggedTask);
+        
+        setTempActiveTasks(newTasks);
+      } else if (section === 'past' && task) {
+        const draggedIndex = tempOverdueTasks.findIndex(t => t.id === draggedTask.id);
+        const targetIndex = tempOverdueTasks.findIndex(t => t.id === task.id);
+        
+        if (draggedIndex === -1 || targetIndex === -1) return;
+        
+        const newTasks = [...tempOverdueTasks];
+        newTasks.splice(draggedIndex, 1);
+        newTasks.splice(targetIndex, 0, draggedTask);
+        
+        setTempOverdueTasks(newTasks);
+      }
+    }
     setDraggedOverTask(task);
   };
 
@@ -119,87 +218,263 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
     e.dataTransfer!.dropEffect = 'move';
   };
 
-  const handleDrop = (e: DragEvent) => {
+  const handleDrop = (e: DragEvent, section: 'past' | 'present') => {
     e.preventDefault();
     
-    if (draggedTask && tempActiveTasks.length > 0) {
-      // Commit the temporary order
-      const newTasks = [...tempActiveTasks, ...completedTasks];
-      onReorder(newTasks);
+    if (draggedTask) {
+      // Handle cross-section drag from Past to Present
+      if (dragSection === 'past' && section === 'present') {
+        // Moving from past to present - update the task's due date to today
+        const updatedTasks = tempActiveTasks.map(task => 
+          task.id === draggedTask.id 
+            ? { ...task, dueDate: new Date().toISOString().split('T')[0] }
+            : task
+        );
+        
+        // Combine all sections
+        const newTasks = [...tempOverdueTasks, ...updatedTasks, ...completedTasks];
+        
+        // SAFEGUARD: Ensure we're not losing tasks
+        const originalCount = tasks.length;
+        const newCount = newTasks.length;
+        if (newCount === originalCount && newCount > 0) {
+          onReorder(newTasks);
+        } else {
+          console.error('[TABULA] Task count mismatch prevented data loss. Original:', originalCount, 'New:', newCount);
+        }
+      }
+      // Handle same-section reordering
+      else if (dragSection === section) {
+        if (section === 'present' && tempActiveTasks.length > 0) {
+          // Commit the temporary order for present section
+          const newTasks = [...sortedOverdueTasks, ...tempActiveTasks, ...completedTasks];
+          
+          // SAFEGUARD: Ensure we're not losing tasks
+          const originalCount = tasks.length;
+          const newCount = newTasks.length;
+          if (newCount === originalCount && newCount > 0) {
+            onReorder(newTasks);
+          } else {
+            console.error('[TABULA] Task count mismatch prevented data loss. Original:', originalCount, 'New:', newCount);
+          }
+        } else if (section === 'past' && tempOverdueTasks.length > 0) {
+          // Commit the temporary order for past section
+          const newTasks = [...tempOverdueTasks, ...baseActiveTasks, ...completedTasks];
+          
+          // SAFEGUARD: Ensure we're not losing tasks
+          const originalCount = tasks.length;
+          const newCount = newTasks.length;
+          if (newCount === originalCount && newCount > 0) {
+            onReorder(newTasks);
+          } else {
+            console.error('[TABULA] Task count mismatch prevented data loss. Original:', originalCount, 'New:', newCount);
+          }
+        }
+      }
+      // Prevent dragging from Present to Past
+      else if (dragSection === 'present' && section === 'past') {
+        console.log('[TABULA] Cannot drag from Present to Past');
+      }
     }
     
     setDraggedTask(null);
     setDraggedOverTask(null);
     setTempActiveTasks([]);
+    setTempOverdueTasks([]);
+    setDragSection(null);
   };
 
   const handleDragEnd = () => {
     setDraggedTask(null);
     setDraggedOverTask(null);
     setTempActiveTasks([]);
+    setTempOverdueTasks([]);
+    setDragSection(null);
   };
 
-  const handleSort = () => {
-    if (!isSorted) {
-      const sortedTasks = [...sortActiveTasks(activeTasks), ...completedTasks];
-      onReorder(sortedTasks);
+  const handleSortPresent = () => {
+    if (!isPresentSorted) {
+      const sortedTasks = [...sortedOverdueTasks, ...sortActiveTasks(activeTasks), ...completedTasks];
+      
+      // SAFEGUARD: Ensure we're not losing tasks
+      const originalCount = tasks.length;
+      const newCount = sortedTasks.length;
+      if (newCount === originalCount && newCount > 0) {
+        onReorder(sortedTasks);
+      } else {
+        console.error('[TABULA] Sort prevented data loss. Original:', originalCount, 'New:', newCount);
+      }
+    }
+  };
+
+  const handleSortPast = () => {
+    if (!isPastSorted) {
+      const sortedPastTasks = sortActiveTasks([...overdueTasks]);
+      const sortedTasks = [...sortedPastTasks, ...activeTasks, ...completedTasks];
+      
+      // SAFEGUARD: Ensure we're not losing tasks
+      const originalCount = tasks.length;
+      const newCount = sortedTasks.length;
+      if (newCount === originalCount && newCount > 0) {
+        onReorder(sortedTasks);
+      } else {
+        console.error('[TABULA] Sort prevented data loss. Original:', originalCount, 'New:', newCount);
+      }
     }
   };
 
   return (
     <div className="space-y-4">
-      {activeTasks.length > 0 && (
+      {overdueTasks.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            {activeTasks.length > 0 ? (
+              <button
+                onClick={() => setShowOverdue(!showOverdue)}
+                className={`flex items-center gap-2 text-sm font-medium uppercase tracking-wider transition-colors ${
+                  showOverdue 
+                    ? 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200' 
+                    : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-400'
+                }`}
+              >
+                <svg 
+                  className={`w-3 h-3 transition-transform ${
+                    showOverdue ? 'rotate-90' : ''
+                  }`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                Past {showOverdue && `(${overdueTasks.length})`}
+              </button>
+            ) : (
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                Past ({overdueTasks.length})
+              </h3>
+            )}
+            {(showOverdue || activeTasks.length === 0) && (
+              <button
+                onClick={handleSortPast}
+                disabled={isPastSorted}
+                className={`px-3 py-1 text-xs font-medium rounded-md border transition-all flex items-center gap-1 ${
+                  isPastSorted
+                    ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 cursor-default'
+                    : 'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 cursor-pointer'
+                }`}
+              >
+                {isPastSorted ? (
+                  <>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Sorted
+                  </>
+                ) : (
+                  'Sort'
+                )}
+              </button>
+            )}
+          </div>
+          {(showOverdue || activeTasks.length === 0) && (
+            <div className="space-y-2">
+              {overdueTasks.map((task) => (
+                <div
+                  key={task.id}
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, task, 'past')}
+                  onDragEnter={(e) => handleDragEnter(e, task, 'past')}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, 'past')}
+                  onDragEnd={handleDragEnd}
+                  className={`transition-all duration-200 cursor-move ${
+                    draggedTask && draggedTask.id === task.id ? 'opacity-50' : ''
+                  }`}
+                >
+                  <TaskItem 
+                    key={task.id}
+                    task={task}
+                    onToggle={onToggle}
+                    onDelete={onDelete}
+                    onUpdate={onUpdate}
+                    isDraggable={true}
+                    isEditing={editingTaskId === task.id}
+                    onEditStart={() => setEditingTaskId(task.id)}
+                    onEditEnd={() => setEditingTaskId(null)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {(activeTasks.length > 0 || overdueTasks.length > 0) && (
         <div className="space-y-2">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-              Active ({activeTasks.length})
+              Present {activeTasks.length > 0 && `(${activeTasks.length})`}
             </h3>
-            <button
-              onClick={handleSort}
-              disabled={isSorted}
-              className={`px-3 py-1 text-xs font-medium rounded-md border transition-all flex items-center gap-1 ${
-                isSorted
-                  ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 cursor-default'
-                  : 'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 cursor-pointer'
-              }`}
-            >
-              {isSorted ? (
-                <>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Sorted
-                </>
-              ) : (
-                'Sort'
-              )}
-            </button>
+            {activeTasks.length > 0 && (
+              <button
+                onClick={handleSortPresent}
+                disabled={isPresentSorted}
+                className={`px-3 py-1 text-xs font-medium rounded-md border transition-all flex items-center gap-1 ${
+                  isPresentSorted
+                    ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 cursor-default'
+                    : 'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 cursor-pointer'
+                }`}
+              >
+                {isPresentSorted ? (
+                  <>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Sorted
+                  </>
+                ) : (
+                  'Sort'
+                )}
+              </button>
+            )}
           </div>
-          {activeTasks.map((task) => (
-            <div
-              key={task.id}
-              draggable={true}
-              onDragStart={(e) => handleDragStart(e, task)}
-              onDragEnter={(e) => handleDragEnter(e, task)}
+          {activeTasks.length > 0 ? (
+            activeTasks.map((task) => (
+              <div
+                key={task.id}
+                draggable={true}
+                onDragStart={(e) => handleDragStart(e, task, 'present')}
+                onDragEnter={(e) => handleDragEnter(e, task, 'present')}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'present')}
+                onDragEnd={handleDragEnd}
+                className={`transition-all duration-200 cursor-move ${
+                  draggedTask && draggedTask.id === task.id ? 'opacity-50' : ''
+                }`}
+              >
+                <TaskItem 
+                  task={task}
+                  onToggle={onToggle}
+                  onDelete={onDelete}
+                  onUpdate={onUpdate}
+                  isDraggable={true}
+                  isEditing={editingTaskId === task.id}
+                  onEditStart={() => setEditingTaskId(task.id)}
+                  onEditEnd={() => setEditingTaskId(null)}
+                />
+              </div>
+            ))
+          ) : (
+            <div 
+              className="p-8 border-2 border-dashed border-gray-300 dark:border-zinc-600 rounded-lg text-center text-gray-500 dark:text-gray-400"
               onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onDragEnd={handleDragEnd}
-              className={`transition-all duration-200 cursor-move ${
-                draggedTask && draggedTask.id === task.id ? 'opacity-50' : ''
-              }`}
+              onDragEnter={(e) => handleDragEnter(e, null, 'present')}
+              onDrop={(e) => handleDrop(e, 'present')}
             >
-              <TaskItem 
-                task={task}
-                onToggle={onToggle}
-                onDelete={onDelete}
-                onUpdate={onUpdate}
-                isDraggable={true}
-                isEditing={editingTaskId === task.id}
-                onEditStart={() => setEditingTaskId(task.id)}
-                onEditEnd={() => setEditingTaskId(null)}
-              />
+              <p className="text-sm">Drag tasks from Past to make them current</p>
             </div>
-          ))}
+          )}
         </div>
       )}
 

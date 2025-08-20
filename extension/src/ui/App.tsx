@@ -194,6 +194,17 @@ export default function App({ onSnooze }: AppProps) {
   };
 
   const reorderTasks = async (updatedTasks: Task[]) => {
+    // SAFEGUARD: Prevent accidental task deletion
+    if (updatedTasks.length === 0 && tasks.length > 0) {
+      console.error('[TABULA] Prevented complete task list deletion. Original count:', tasks.length);
+      return;
+    }
+    
+    // SAFEGUARD: Warn if task count changes unexpectedly
+    if (updatedTasks.length !== tasks.length) {
+      console.warn('[TABULA] Task count changed during reorder. Original:', tasks.length, 'New:', updatedTasks.length);
+    }
+    
     setTasks(updatedTasks);
     await saveTasks(updatedTasks);
   };
