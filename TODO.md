@@ -1,91 +1,205 @@
 # TODO - Feature Roadmap
 
-## Task Management
-- [ ] Set priority levels for tasks (High/Medium/Low)
-- [ ] Auto-sort tasks by priority/relevance at the top of the agenda
-- [ ] Add recurring tasks (daily, weekly, monthly)
-- [ ] Tag tasks with custom labels/categories
+## ✅ Completed Features
+- [x] Core task management (add, complete, delete, reorder)
+- [x] Priority levels (High/Medium/Low with color coding)
+- [x] Due dates with calendar picker
+- [x] Drag-and-drop task reordering
+- [x] Undo/redo support (Ctrl/Cmd+Z)
+- [x] Dark/light/auto theme modes
+- [x] Domain-based auto-display
+- [x] Snooze and dismiss functionality
+- [x] Cross-tab synchronization
+- [x] Inspirational quote rotation
+- [x] Data export/import
+- [x] GitHub and Ko-fi integration
 
-## Notifications & Alerts
-- [ ] Desktop notifications for upcoming tasks
-- [ ] Alert system for time-sensitive items
-- [ ] Reminder notifications before due dates
+## 🚀 Phase 1: Core Enhancements (High Priority)
 
-## Calendar Integration
-- [ ] Add events directly to calendar
-- [ ] Sync tasks with calendar applications
-- [ ] View tasks in calendar format
+### Task Management Improvements
+- [ ] **Tags/Labels System** - Custom categories for better organization
+  - Color-coded tags
+  - Multi-tag support per task
+  - Quick filter by tag
+  
+- [ ] **Task Search** - Find tasks quickly
+  - Real-time search as you type
+  - Search in task titles and descriptions
+  - Search history
 
-## Search & Organization
-- [ ] Full-text search across all tasks and notes
-- [ ] Filter tasks by tags, priority, or date
-- [ ] Advanced search with regex support
+- [ ] **Keyboard Shortcuts** - Power user features
+  - Quick add (Ctrl/Cmd+N)
+  - Navigate tasks with arrow keys
+  - Quick complete (Space)
+  - Quick delete (Delete/Backspace)
+  - Focus search (Ctrl/Cmd+F)
 
-## Note-Taking & Formatting
-- [ ] Markdown support for task descriptions
-- [ ] Rich text formatting options
-- [ ] Attach notes to tasks
-- [ ] Preview formatted content
+### Content & Formatting
+- [ ] **Markdown Support** - Rich text in task descriptions
+  - Bold, italic, strikethrough
+  - Links and code blocks
+  - Checklists within tasks
+  - Preview/edit toggle
 
-## Considerations for Feature Prioritization
+## 📋 Phase 2: Productivity Features (Medium Priority)
 
-### Core Value Proposition
-TABULA's unique strength is its **interception-based productivity model** - it blocks distracting websites and converts that moment of distraction into productive task management. New features should enhance this core loop rather than dilute it.
+### Recurring & Automated Tasks
+- [ ] **Recurring Tasks** - Templates for regular activities
+  - Daily/weekly/monthly patterns
+  - Custom recurrence rules
+  - Auto-create on schedule
+  - Skip/reschedule options
 
-### Implementation Priorities
+- [ ] **Smart Sorting** - Intelligent task prioritization
+  - Sort by due date proximity
+  - Bubble up overdue tasks
+  - Priority + date hybrid sorting
+  - Custom sort preferences
 
-#### 1. High Impact, Low Complexity (Do First)
-- **Task priorities & sorting** - Essential for users to focus on what matters when intercepted
-- **Markdown in descriptions** - Already have the UI, just need rendering
-- **Tags/labels** - Simple to implement, high organizational value
-- **Keyboard shortcuts** - Quick task entry when blocked from a site
+### Analytics & Insights
+- [ ] **Productivity Analytics** (Local only)
+  - Tasks completed per day/week
+  - Time spent on sites before dismissing
+  - Snooze pattern analysis
+  - Productivity trends over time
+  - Export analytics data
 
-#### 2. Strategic Enhancements (Do Second)  
-- **Recurring tasks** - Builds habit formation, aligns with breaking bad browsing habits
-- **Desktop notifications** - Reminds users of priorities before they hit blocked sites
-- **Full-text search** - Becomes critical as task lists grow
+### Notifications
+- [ ] **Desktop Notifications** - Proactive reminders
+  - Due date reminders
+  - Daily task summary
+  - Overdue task alerts
+  - Customizable notification schedule
 
-#### 3. Complex but Valuable (Plan Carefully)
-- **Calendar integration** - Requires OAuth, API complexity, but connects tasks to time
-- **Cross-device sync** - Needs backend infrastructure but enables mobile blocking
+## 🌟 Phase 3: Integrations (Nice to Have)
 
-### Technical Considerations
+### Note-Taking Integration
+- [ ] **Obsidian Integration** - Sync with knowledge base
+  - Export tasks to daily notes
+  - Import tasks from Obsidian
+  - Bi-directional sync option
+  - Template support
+  - Link tasks to notes
 
-#### Current Architecture Strengths
-- Clean separation between UI components and storage layer
-- WebExtension APIs provide good foundation for notifications
-- Shadow DOM isolation prevents site interference
-- Existing snooze system can be extended for recurring tasks
+- [ ] **Notion Integration** - Connect with workspace
+  - Sync with Notion databases
+  - Create tasks from Notion
+  - Update status in both systems
 
-#### Challenges to Address
-- **Storage limits** - browser.storage.local has 5MB limit, may need IndexedDB for attachments/notes
-- **Performance** - Full-text search needs efficient indexing strategy
-- **Permissions** - New features may require additional permissions (notifications, calendar access)
+### Calendar & Time Management
+- [ ] **Calendar Integration** - Time-based task management
+  - Google Calendar sync
+  - Outlook integration
+  - Time blocking for tasks
+  - Calendar view in extension
 
-### User Experience Principles
+### Developer Tools
+- [ ] **API/Webhooks** - External integrations
+  - REST API for task management
+  - Webhook triggers for events
+  - Zapier/IFTTT integration
+  - CLI tool for task management
 
-#### Keep the Friction Productive
-- The interruption is the feature - don't make dismissing too easy
-- Quick task capture should be possible in under 5 seconds
-- Priority tasks should be immediately visible on intercept
+## 🔮 Phase 4: Ecosystem Expansion (Future Vision)
 
-#### Avoid Feature Creep
-- Resist becoming a full project management tool (plenty exist already)
-- Don't add collaboration features - this is a personal productivity tool
-- Keep mobile app separate if built - different use cases
+### Multi-Device Support
+- [ ] **Mobile Companion App** - iOS/Android apps
+  - Sync with extension
+  - Mobile site blocking
+  - Quick task capture
+  - Widget support
 
-#### Metrics to Guide Development
-- Measure: Tasks completed vs tasks created ratio
-- Measure: Time between intercept and productive action
-- Measure: Snooze usage patterns (are we actually changing habits?)
+- [ ] **Cloud Sync** (Privacy-first)
+  - End-to-end encrypted backup
+  - Cross-device synchronization
+  - Self-hosted option
+  - Account system
 
-### Recommended Implementation Order
+### Advanced Features
+- [ ] **AI Assistant** - Smart task management
+  - Natural language task creation
+  - Smart task suggestions
+  - Auto-categorization
+  - Priority recommendations
 
-1. **Priority system + auto-sort** - Immediate value, straightforward implementation
-2. **Tags** - Enhances organization without complexity  
-3. **Markdown support** - Leverages existing UI, improves task clarity
-4. **Keyboard shortcuts** - Reduces friction for power users
-5. **Recurring tasks** - Builds on existing date system
-6. **Search** - Becomes necessary as users accumulate tasks
-7. **Notifications** - Extends the intervention model beyond browsing
-8. **Calendar integration** - Major feature requiring careful planning
+- [ ] **Team Features** (Separate product)
+  - Shared task lists for families
+  - Accountability partners
+  - Team productivity metrics
+
+## 🛠️ Technical Improvements
+
+### Performance & Storage
+- [ ] **IndexedDB Migration** - For large datasets
+  - Handle 1000+ tasks efficiently
+  - Full-text search indexing
+  - Attachment support
+  - Better performance
+
+### Developer Experience
+- [ ] **Plugin System** - Extensibility
+  - Custom integrations
+  - Theme marketplace
+  - Community plugins
+  - Developer API
+
+## ❌ Deprecated/Not Planned
+
+These features were considered but decided against to maintain focus:
+
+- ~~Project management features~~ - Keep it simple, not another Jira
+- ~~Time tracking~~ - Adds complexity without core value
+- ~~Social features~~ - This is a personal productivity tool
+- ~~Ads or monetization tracking~~ - Privacy first, always
+- ~~Cloud storage requirement~~ - Local-first is a core principle
+
+## 📊 Implementation Priorities
+
+### Decision Criteria
+1. **User Impact** - How many users will benefit?
+2. **Complexity** - How difficult to implement?
+3. **Core Value** - Does it enhance the distraction-blocking loop?
+4. **Privacy** - Does it maintain local-first principles?
+
+### Recommended Order
+1. **Tags & Search** - High impact, moderate complexity
+2. **Markdown Support** - Highly requested, straightforward
+3. **Keyboard Shortcuts** - Power user essential
+4. **Recurring Tasks** - Common use case
+5. **Obsidian Integration** - Strong user overlap
+6. **Analytics** - Helps users understand habits
+7. **Mobile App** - Major expansion but different platform
+
+## 💡 Design Principles
+
+### Keep the Core Loop Sacred
+- The interruption is the feature
+- Quick task capture (< 5 seconds)
+- Minimal clicks to productivity
+- Don't make dismissal too easy
+
+### Privacy is Non-Negotiable
+- Local-first always
+- Optional cloud features only
+- No tracking or analytics to third parties
+- User owns their data
+
+### Simplicity Over Features
+- Every feature must justify its complexity
+- Avoid feature creep
+- Stay focused on time reclamation
+- Clean, distraction-free UI
+
+## 📈 Success Metrics
+
+Track these to guide development:
+- Task completion rate
+- Time to first productive action after intercept
+- Snooze frequency reduction over time
+- User retention after 30 days
+- Feature adoption rates
+
+---
+
+*Last Updated: August 2024*
+*Version: 0.2.6*

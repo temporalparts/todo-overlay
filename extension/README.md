@@ -50,9 +50,7 @@ extension/
 │   ├── bump-version.js  # Version management
 │   ├── convert-svg-to-icons.js  # Icon generation
 │   └── create-store-assets.js   # Chrome Web Store assets
-├── dist/                # Built extension (generated)
-├── store-assets/        # Chrome Web Store images (generated)
-└── TODO/               # Feature planning documents
+└── dist/                # Built extension (generated)
 ```
 
 ## 🛠️ Available Scripts
@@ -186,7 +184,7 @@ Website → content/inject.ts → Creates Shadow DOM → Renders ui/App.tsx
 5. **Error Handling** - Graceful degradation
 
 ### Adding New Features
-1. Create feature plan in `TODO/` folder
+1. Plan the feature and update TODO.md
 2. Implement with TypeScript
 3. Update types in `src/types.ts`
 4. Add UI components in `src/ui/components/`

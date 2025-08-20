@@ -27,9 +27,9 @@ The name TABULA comes from "tabula rasa" (blank slate), representing the fresh s
 
 ## ✨ Features
 
-### Core Functionality (v0.2.5)
+### Core Functionality (v0.2.6)
 - 📝 **Smart Task Management** - Add, complete, delete, and drag-to-reorder tasks
-- 🎯 **Priority System** - Mark tasks as P0-P3 with visual indicators
+- 🎯 **Priority System** - Mark tasks as High/Medium/Low with color coding
 - 📅 **Due Dates** - Set deadlines for your tasks
 - ↩️ **Undo Support** - Cmd/Ctrl+Z to undo deletions, completions, or moves
 - 🌐 **Domain Detection** - Automatically appears on configured websites
@@ -91,7 +91,7 @@ The extension will be available on the Chrome Web Store soon.
 - **Complete Task**: Click the checkbox
 - **Delete Task**: Hover and click the trash icon
 - **Reorder Tasks**: Drag and drop to prioritize
-- **Set Priority**: Use P0 (critical) through P3 (low)
+- **Set Priority**: Choose High, Medium, or Low with color indicators
 - **Add Due Date**: Click the calendar icon
 - **Undo Actions**: Cmd/Ctrl+Z
 
@@ -185,25 +185,39 @@ See [extension/README.md](extension/README.md) for detailed development instruct
 
 ## 🗺️ Roadmap
 
-### Current (v0.2.x)
-- ✅ Core task management
-- ✅ Domain detection
-- ✅ Snooze/dismiss
-- ✅ Dark mode
-- ✅ Priority system
-- ✅ Due dates
-- ✅ Undo support
+### Current Features (v0.2.6)
+- ✅ Core task management with drag-and-drop
+- ✅ Priority system (High/Medium/Low)
+- ✅ Due dates with calendar picker
+- ✅ Undo/redo support
+- ✅ Domain detection and auto-display
+- ✅ Snooze/dismiss timers
+- ✅ Dark/light/auto themes
+- ✅ Inspirational quote rotation
+- ✅ Cross-tab synchronization
+- ✅ Data export/import
 
-### Planned Features
-- 📝 Markdown support for task notes
-- 🔍 Full-text search across tasks
-- ⌨️ Advanced keyboard shortcuts
-- 📊 Productivity analytics (local only)
-- 🔄 Recurring tasks
-- 📱 Mobile companion app
-- 🌍 Multi-language support
+### Planned Enhancements
 
-See the [TODO folder](extension/TODO/) for detailed feature plans.
+#### Phase 1: Core Improvements
+- 🏷️ **Tags & Labels** - Organize tasks with custom categories
+- 📝 **Markdown Support** - Rich text formatting for task descriptions
+- ⌨️ **Keyboard Shortcuts** - Power user navigation
+- 🔍 **Search & Filter** - Find tasks quickly
+
+#### Phase 2: Advanced Features
+- 🔄 **Recurring Tasks** - Daily/weekly/monthly task templates
+- 🔔 **Notifications** - Desktop reminders for due tasks
+- 📊 **Analytics** - Track productivity patterns (local only)
+- 🎯 **Auto-sort** - Intelligent task prioritization
+
+#### Phase 3: Ecosystem
+- 📅 **Calendar Integration** - Sync with Google Calendar/Outlook
+- 📱 **Mobile Companion** - iOS/Android apps
+- 🌍 **Internationalization** - Multi-language support
+- 🔄 **Cloud Sync** - Optional encrypted backup (privacy-first)
+
+See [TODO.md](TODO.md) for detailed feature planning and technical considerations.
 
 ## 💬 Support
 
