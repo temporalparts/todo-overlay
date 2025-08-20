@@ -85,11 +85,10 @@ export default function TaskForm({
         // Only submit if date picker dropdown is not open
         e.preventDefault();
         handleSubmit();
-      } else if (isInDropdown && target.tagName === 'BUTTON') {
-        // If we're in the dropdown and on a button, prevent form submission
-        e.preventDefault();
+      } else if (isInDropdown) {
+        // If we're in the dropdown, stop propagation but don't prevent default
+        // This allows buttons to handle Enter naturally
         e.stopPropagation();
-        // Don't trigger click here, let the button handle it naturally
       }
     }
   };
