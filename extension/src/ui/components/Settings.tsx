@@ -1,16 +1,40 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import browser from 'webextension-polyfill';
 import { getSettings, saveSettings } from '../../state/storage';
 import { Settings as SettingsType } from '../../types';
 
-export default function Settings() {
+interface SettingsProps {
+  scrollToDomains?: boolean;
+  onScrollComplete?: () => void;
+}
+
+export default function Settings({ scrollToDomains, onScrollComplete }: SettingsProps) {
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
+  const domainsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadSettings();
+  }, []);
+
+  useEffect(() => {
+    if (scrollToDomains && domainsRef.current && !loading) {
+      // Add a small delay to ensure the content is rendered
+      setTimeout(() => {
+        if (domainsRef.current) {
+          domainsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (onScrollComplete) {
+            // Keep the highlight for 2 seconds
+            setTimeout(onScrollComplete, 2000);
+          }
+        }
+      }, 100);
+    }
+  }, [scrollToDomains, loading, onScrollComplete]);
+
+  useEffect(() => {
     
     // Listen for storage changes from other tabs
     const handleStorageChange = (changes: any, areaName: string) => {
@@ -226,7 +250,7 @@ export default function Settings() {
       </div>
 
       {/* Enabled domains */}
-      <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
+      <div ref={domainsRef} className={`bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 transition-all duration-300 ${scrollToDomains ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-zinc-900' : ''}`}>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Enabled Domains
         </h3>

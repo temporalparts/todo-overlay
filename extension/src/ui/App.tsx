@@ -17,6 +17,7 @@ export default function App({ onSnooze }: AppProps) {
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'tasks' | 'settings'>('tasks');
+  const [scrollToDomains, setScrollToDomains] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const currentDomain = getRootDomain(window.location.href);
 
@@ -152,9 +153,16 @@ export default function App({ onSnooze }: AppProps) {
                   <span className="underline">ta</span>ke <span className="underline">b</span>ack <span className="underline italic">your</span> <span className="italic font-bold"><span className="underline">L</span>ife</span> <span className="underline">a</span>gain
                 </p>
               </div>
-              <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
+              <button
+                onClick={() => {
+                  setActiveTab('settings');
+                  setScrollToDomains(true);
+                }}
+                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-sm transition-colors cursor-pointer"
+                title="Click to manage enabled domains"
+              >
                 URL matches: {currentDomain}
-              </span>
+              </button>
             </div>
             <div className="flex gap-3">
               <button
@@ -235,7 +243,7 @@ export default function App({ onSnooze }: AppProps) {
               </div>
             </>
           ) : (
-            <Settings />
+            <Settings scrollToDomains={scrollToDomains} onScrollComplete={() => setScrollToDomains(false)} />
           )}
         </div>
       </div>
