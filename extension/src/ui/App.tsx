@@ -381,7 +381,7 @@ export default function App({ onSnooze }: AppProps) {
                 title={`Snooze for ${settings?.snoozeMinutes || 15} minutes`}
               >
                 <span className="hidden xs:inline">Snooze </span>
-                <span>{formatTime(settings?.snoozeMinutes || 15)}</span>
+                <span>({formatTime(settings?.snoozeMinutes || 15)})</span>
               </button>
               <button
                 onClick={handleDismiss}
@@ -389,7 +389,7 @@ export default function App({ onSnooze }: AppProps) {
                 title={`Dismiss for ${settings?.dismissMinutes || 60} minutes`}
               >
                 <span className="hidden xs:inline">Dismiss </span>
-                <span>{formatTime(settings?.dismissMinutes || 60)}</span>
+                <span>({formatTime(settings?.dismissMinutes || 60)})</span>
               </button>
             </div>
           </div>
