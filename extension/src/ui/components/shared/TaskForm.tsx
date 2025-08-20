@@ -72,24 +72,32 @@ export default function TaskForm({
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && showCancel) {
-      handleSubmit();
-    }
-    if (e.key === 'Escape' && showCancel && onCancel) {
-      onCancel();
+  // Add keydown handler at form level to catch Enter anywhere
+  const handleFormKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      // Check if the date picker dropdown is open
+      const dateDropdown = document.querySelector('.date-dropdown-wrapper .absolute');
+      if (!dateDropdown) {
+        // Only submit if date picker dropdown is not open
+        e.preventDefault();
+        handleSubmit();
+      }
     }
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" onKeyDown={handleFormKeyDown}>
       <div className="space-y-2">
         <div className="flex gap-2">
           <input
             type="text"
             value={title}
             onInput={(e) => handleInputChange((e.target as HTMLInputElement).value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && showCancel && onCancel) {
+                onCancel();
+              }
+            }}
             placeholder={placeholder}
             className={`flex-1 px-3 py-1.5 text-sm border rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${
               showError 
@@ -97,11 +105,13 @@ export default function TaskForm({
                 : 'border-gray-200 dark:border-zinc-700 focus:ring-indigo-500 dark:focus:ring-indigo-400'
             } ${showCancel ? '' : 'px-4 py-2'}`}
             autoFocus={autoFocus}
+            tabIndex={1}
           />
           <button
             type="button"
             onClick={() => handleSubmit()}
             className={`${showCancel ? 'px-4 py-1.5 text-sm' : 'px-6 py-2'} bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors`}
+            tabIndex={4}
           >
             {submitLabel}
           </button>

@@ -12,7 +12,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside and handle focus trapping
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -20,10 +20,81 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
       }
     };
     
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowDropdown(false);
+        // Return focus to the date picker button
+        const button = dropdownRef.current?.querySelector('button[tabIndex="3"]') as HTMLButtonElement;
+        button?.focus();
+      }
+      
+      // Prevent Enter from bubbling up to form when dropdown is open
+      if (e.key === 'Enter' && showDropdown) {
+        // Check if the target is inside the dropdown or is the dropdown itself
+        const dropdown = dropdownRef.current?.querySelector('.absolute');
+        if (dropdown && (dropdown.contains(e.target as Node) || dropdownRef.current?.contains(e.target as Node))) {
+          // Prevent the event from reaching the form
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          // Allow the button to handle the click
+          const target = e.target as HTMLElement;
+          if (target.tagName === 'BUTTON') {
+            target.click();
+          }
+        }
+      }
+      
+      // Focus trapping
+      if (e.key === 'Tab' && showDropdown) {
+        const focusableElements = dropdownRef.current?.querySelectorAll(
+          'button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        
+        if (focusableElements && focusableElements.length > 0) {
+          const firstElement = focusableElements[0] as HTMLElement;
+          const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+          
+          if (e.shiftKey) {
+            // Shift+Tab - move focus backward
+            if (document.activeElement === firstElement) {
+              e.preventDefault();
+              lastElement.focus();
+            }
+          } else {
+            // Tab - move focus forward
+            if (document.activeElement === lastElement) {
+              e.preventDefault();
+              firstElement.focus();
+            }
+          }
+        }
+      }
+    };
+    
     if (showDropdown) {
       // Use click instead of mousedown to allow button clicks to fire first
       document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      // Use capture phase to intercept Enter before it bubbles to form
+      document.addEventListener('keydown', handleKeyDown, true);
+      
+      // Focus the first preset button when dropdown opens
+      setTimeout(() => {
+        // Find the dropdown content div (the absolute positioned one)
+        const dropdown = dropdownRef.current?.querySelector('.absolute');
+        if (dropdown) {
+          // Get the first button in the dropdown
+          const firstButton = dropdown.querySelector('button') as HTMLButtonElement;
+          if (firstButton) {
+            firstButton.focus();
+          }
+        }
+      }, 10);
+      
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown, true);
+      };
     }
   }, [showDropdown]);
 
@@ -80,6 +151,12 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
         break;
     }
     setShowDropdown(false);
+    
+    // Return focus to the date picker button
+    setTimeout(() => {
+      const button = dropdownRef.current?.querySelector('button[tabIndex="3"]') as HTMLButtonElement;
+      button?.focus();
+    }, 0);
   };
 
   const generateCalendarDays = () => {
@@ -108,6 +185,12 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
     const day = String(date.getDate()).padStart(2, '0');
     onChange(`${year}-${month}-${day}`);
     setShowDropdown(false);
+    
+    // Return focus to the date picker button
+    setTimeout(() => {
+      const button = dropdownRef.current?.querySelector('button[tabIndex="3"]') as HTMLButtonElement;
+      button?.focus();
+    }, 0);
   };
 
   const changeMonth = (direction: number, e: Event) => {
@@ -123,15 +206,27 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
       <button
         type="button"
         onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setShowDropdown(!showDropdown);
+          // Only open dropdown on actual click, not Enter key
+          if (e.detail > 0) {  // e.detail is 0 for keyboard activation, > 0 for mouse clicks
+            e.preventDefault();
+            e.stopPropagation();
+            setShowDropdown(!showDropdown);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowDropdown(!showDropdown);
+          }
+          // Don't handle Enter key - let it bubble up to submit the form
         }}
         className={`px-3 py-1 text-xs font-medium rounded-md border transition-all flex items-center gap-1 ${
           value 
             ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800'
             : 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700'
         }`}
+        tabIndex={3}
       >
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

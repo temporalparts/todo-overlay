@@ -28,6 +28,7 @@ export default function PrioritySelector({ value, onChange }: PrioritySelectorPr
             ? getPriorityColor('high')
             : 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700'
         }`}
+        tabIndex={2}
       >
         High
       </button>
@@ -39,6 +40,7 @@ export default function PrioritySelector({ value, onChange }: PrioritySelectorPr
             ? getPriorityColor('medium')
             : 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700'
         }`}
+        tabIndex={2}
       >
         Medium
       </button>
@@ -50,6 +52,7 @@ export default function PrioritySelector({ value, onChange }: PrioritySelectorPr
             ? getPriorityColor('low')
             : 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700'
         }`}
+        tabIndex={2}
       >
         Low
       </button>
