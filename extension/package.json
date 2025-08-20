@@ -1,0 +1,46 @@
+{
+  "name": "nudgenotes",
+  "version": "0.1.10",
+  "description": "A minimalist TODO overlay that nudges you on distractor sites",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "npm run version:bump && node scripts/build-all.js",
+    "build:nobump": "node scripts/build-all.js",
+    "build:old": "tsc && vite build && node scripts/wrap-content.js",
+    "version:bump": "node scripts/bump-version.js",
+    "version:minor": "node scripts/bump-version.js minor",
+    "version:major": "node scripts/bump-version.js major",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@preact/signals": "^1.2.2",
+    "clsx": "^2.1.0",
+    "date-fns": "^3.3.1",
+    "dompurify": "^3.0.9",
+    "idb": "^8.0.0",
+    "marked": "^12.0.0",
+    "preact": "^10.19.3",
+    "uuid": "^9.0.1",
+    "webextension-polyfill": "^0.10.0",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.8.1",
+    "@types/chrome": "^0.0.260",
+    "@types/dompurify": "^3.0.5",
+    "@types/uuid": "^9.0.8",
+    "@types/webextension-polyfill": "^0.10.7",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.56.0",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vite-plugin-static-copy": "^1.0.0"
+  }
+}
