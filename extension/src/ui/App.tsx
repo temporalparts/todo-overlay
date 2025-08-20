@@ -271,7 +271,18 @@ export default function App({ onSnooze }: AppProps) {
             </div>
           </div>
           <p className="text-white/80">
-            Your life is precious. Consider before gifting your time to <span className="font-mono">{currentDomain}</span>.
+            Your life is precious. Consider before gifting your time to <span className="font-mono">
+              {(() => {
+                const lowerDomain = currentDomain.toLowerCase();
+                if (lowerDomain === 'facebook.com' || lowerDomain === 'instagram.com') {
+                  return 'Mark Zuckerberg';
+                } else if (lowerDomain === 'x.com' || lowerDomain === 'twitter.com') {
+                  return 'Elon Musk';
+                } else {
+                  return currentDomain;
+                }
+              })()}
+            </span>.
           </p>
         </div>
       </div>
