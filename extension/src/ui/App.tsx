@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import browser from 'webextension-polyfill';
 import { Task, Settings as SettingsType, Priority } from '../types';
 import { getTasks, saveTasks, getSettings } from '../state/storage';
@@ -13,6 +13,12 @@ interface AppProps {
   onSnooze: (minutes: number) => void;
 }
 
+interface UndoAction {
+  type: 'delete' | 'complete' | 'reorder';
+  previousTasks: Task[];
+  timestamp: number;
+}
+
 export default function App({ onSnooze }: AppProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [settings, setSettings] = useState<SettingsType | null>(null);
@@ -23,6 +29,10 @@ export default function App({ onSnooze }: AppProps) {
   const [quotesArray, setQuotesArray] = useState<Quote[]>([]);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [undoHistory, setUndoHistory] = useState<UndoAction[]>([]);
+  const [showUndoToast, setShowUndoToast] = useState(false);
+  const [showUndoPrompt, setShowUndoPrompt] = useState(false);
+  const undoPromptTimer = useRef<number | null>(null);
   const currentDomain = getRootDomain(window.location.href);
 
   // Helper to format time display
@@ -113,15 +123,26 @@ export default function App({ onSnooze }: AppProps) {
       }
     };
     
+    // Listen for keyboard shortcuts
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + Z for undo
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        performUndo();
+      }
+    };
+    
     browser.storage.onChanged.addListener(handleStorageChange);
     mediaQuery.addEventListener('change', handleThemeChange);
+    document.addEventListener('keydown', handleKeyDown);
     
     // Cleanup listeners on unmount
     return () => {
       browser.storage.onChanged.removeListener(handleStorageChange);
       mediaQuery.removeEventListener('change', handleThemeChange);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [settings?.theme]);
+  }, [settings?.theme, undoHistory]);
 
   const loadInitialData = async () => {
     const [loadedTasks, loadedSettings] = await Promise.all([
@@ -163,7 +184,52 @@ export default function App({ onSnooze }: AppProps) {
     await saveTasks(updatedTasks);
   };
 
+  const addToUndoHistory = (type: 'delete' | 'complete' | 'reorder', previousTasks: Task[]) => {
+    const newAction: UndoAction = {
+      type,
+      previousTasks: [...previousTasks],
+      timestamp: Date.now()
+    };
+    // Keep only last 10 undo actions
+    setUndoHistory(prev => [newAction, ...prev.slice(0, 9)]);
+    
+    // Show undo prompt
+    setShowUndoPrompt(true);
+    
+    // Clear any existing timer
+    if (undoPromptTimer.current) {
+      clearTimeout(undoPromptTimer.current);
+    }
+    
+    // Auto-hide after 5 seconds
+    undoPromptTimer.current = window.setTimeout(() => {
+      setShowUndoPrompt(false);
+    }, 5000);
+  };
+
+  const performUndo = async () => {
+    if (undoHistory.length === 0) return;
+    
+    const [lastAction, ...remainingHistory] = undoHistory;
+    setTasks(lastAction.previousTasks);
+    await saveTasks(lastAction.previousTasks);
+    setUndoHistory(remainingHistory);
+    
+    // Hide undo prompt
+    setShowUndoPrompt(false);
+    if (undoPromptTimer.current) {
+      clearTimeout(undoPromptTimer.current);
+    }
+    
+    // Show toast notification
+    setShowUndoToast(true);
+    setTimeout(() => setShowUndoToast(false), 3000);
+  };
+
   const toggleTask = async (id: string) => {
+    // Save current state for undo
+    addToUndoHistory('complete', tasks);
+    
     const updatedTasks = tasks.map(task => {
       if (task.id === id) {
         const isCompleting = !task.completed;
@@ -180,6 +246,9 @@ export default function App({ onSnooze }: AppProps) {
   };
 
   const deleteTask = async (id: string) => {
+    // Save current state for undo
+    addToUndoHistory('delete', tasks);
+    
     const updatedTasks = tasks.filter(task => task.id !== id);
     setTasks(updatedTasks);
     await saveTasks(updatedTasks);
@@ -204,6 +273,9 @@ export default function App({ onSnooze }: AppProps) {
     if (updatedTasks.length !== tasks.length) {
       console.warn('[TABULA] Task count changed during reorder. Original:', tasks.length, 'New:', updatedTasks.length);
     }
+    
+    // Save current state for undo (only for reorder/drag operations)
+    addToUndoHistory('reorder', tasks);
     
     setTasks(updatedTasks);
     await saveTasks(updatedTasks);
@@ -242,6 +314,28 @@ export default function App({ onSnooze }: AppProps) {
   // Full-screen takeover UI
   return (
     <div className={`fixed inset-0 bg-white dark:bg-zinc-950 flex flex-col h-screen w-screen overflow-hidden ${isDark ? 'dark' : ''}`}>
+      {/* Undo Prompt Popup */}
+      {showUndoPrompt && undoHistory.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
+          <button
+            onClick={performUndo}
+            className="px-4 py-2 bg-gray-800 dark:bg-zinc-700 text-white rounded-lg shadow-lg hover:bg-gray-900 dark:hover:bg-zinc-600 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            Undo {undoHistory[0].type === 'delete' ? 'delete' : undoHistory[0].type === 'complete' ? 'complete' : 'move'}
+          </button>
+        </div>
+      )}
+      
+      {/* Undo Success Toast - shows in same location after undo */}
+      {showUndoToast && (
+        <div className="fixed bottom-4 right-4 z-50 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg animate-fade-in">
+          Action undone
+        </div>
+      )}
+      
       {/* Header */}
       <div className="bg-indigo-600 dark:bg-indigo-700 text-white p-6 shadow-lg">
         <div className="max-w-4xl mx-auto">
