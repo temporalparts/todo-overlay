@@ -26,7 +26,7 @@ export default function PrioritySelector({ value, onChange }: PrioritySelectorPr
         className={`px-3 py-1 text-xs font-medium rounded-md border transition-all ${
           value === 'high' 
             ? getPriorityColor('high')
-            : 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700'
+            : 'text-red-500/50 dark:text-red-400/40 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:text-red-500/70 dark:hover:text-red-400/60'
         }`}
         tabIndex={2}
       >
@@ -38,7 +38,7 @@ export default function PrioritySelector({ value, onChange }: PrioritySelectorPr
         className={`px-3 py-1 text-xs font-medium rounded-md border transition-all ${
           value === 'medium'
             ? getPriorityColor('medium')
-            : 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700'
+            : 'text-yellow-600/50 dark:text-yellow-400/40 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:text-yellow-600/70 dark:hover:text-yellow-400/60'
         }`}
         tabIndex={2}
       >
@@ -50,7 +50,7 @@ export default function PrioritySelector({ value, onChange }: PrioritySelectorPr
         className={`px-3 py-1 text-xs font-medium rounded-md border transition-all ${
           value === 'low' 
             ? getPriorityColor('low')
-            : 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700'
+            : 'text-blue-500/50 dark:text-blue-400/40 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:text-blue-500/70 dark:hover:text-blue-400/60'
         }`}
         tabIndex={2}
       >
