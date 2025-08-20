@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { Task } from '../../types';
 import TaskItem from './TaskItem';
 
@@ -14,6 +14,7 @@ export default function TaskList({ tasks, onToggle, onDelete, onReorder }: TaskL
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [draggedOverTask, setDraggedOverTask] = useState<Task | null>(null);
   const [tempActiveTasks, setTempActiveTasks] = useState<Task[]>([]);
+  const [showCompleted, setShowCompleted] = useState(false);
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12">
@@ -53,12 +54,11 @@ export default function TaskList({ tasks, onToggle, onDelete, onReorder }: TaskL
   const baseActiveTasks = tasks.filter(t => !t.completed);
   const unsortedCompletedTasks = tasks.filter(t => t.completed);
   
-  // Sort completed tasks by date descending (newest first), then priority descending (high > medium > low)
+  // Sort completed tasks by completion date descending (newest first), then priority descending (high > medium > low)
   const completedTasks = [...unsortedCompletedTasks].sort((a, b) => {
-    // First sort by completion date (using createdAt as proxy for completion time)
-    // We could also use dueDate if preferred
-    const dateA = new Date(a.createdAt).getTime();
-    const dateB = new Date(b.createdAt).getTime();
+    // First sort by completion date
+    const dateA = a.completedAt ? new Date(a.completedAt).getTime() : new Date(a.createdAt).getTime();
+    const dateB = b.completedAt ? new Date(b.completedAt).getTime() : new Date(b.createdAt).getTime();
     if (dateA !== dateB) return dateB - dateA; // Descending (newest first)
     
     // Then sort by priority (high > medium > low > none)
@@ -199,17 +199,34 @@ export default function TaskList({ tasks, onToggle, onDelete, onReorder }: TaskL
 
       {completedTasks.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-            Completed ({completedTasks.length})
-          </h3>
-          {completedTasks.map(task => (
-            <TaskItem 
-              key={task.id}
-              task={task}
-              onToggle={onToggle}
-              onDelete={onDelete}
-            />
-          ))}
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider hover:text-gray-800 dark:hover:text-gray-200 transition-colors w-full text-left"
+          >
+            <svg 
+              className={`w-3 h-3 transition-transform ${
+                showCompleted ? 'rotate-90' : ''
+              }`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            Completed
+          </button>
+          {showCompleted && (
+            <div className="space-y-2">
+              {completedTasks.map(task => (
+                <TaskItem 
+                  key={task.id}
+                  task={task}
+                  onToggle={onToggle}
+                  onDelete={onDelete}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

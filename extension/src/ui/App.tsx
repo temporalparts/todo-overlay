@@ -161,9 +161,17 @@ export default function App({ onSnooze }: AppProps) {
   };
 
   const toggleTask = async (id: string) => {
-    const updatedTasks = tasks.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
-    );
+    const updatedTasks = tasks.map(task => {
+      if (task.id === id) {
+        const isCompleting = !task.completed;
+        return {
+          ...task,
+          completed: isCompleting,
+          completedAt: isCompleting ? new Date().toISOString() : undefined
+        };
+      }
+      return task;
+    });
     setTasks(updatedTasks);
     await saveTasks(updatedTasks);
   };
