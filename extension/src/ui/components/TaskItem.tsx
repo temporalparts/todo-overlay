@@ -220,7 +220,7 @@ export default function TaskItem({
       {!task.completed && (
         <button
           onClick={() => onEditStart?.()}
-          className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 focus:text-indigo-600 dark:focus:text-indigo-400 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 rounded"
           title="Edit task"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,7 +231,7 @@ export default function TaskItem({
 
       <button
         onClick={() => onDelete(task.id)}
-        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-all"
+        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 focus:text-red-600 dark:focus:text-red-400 transition-all focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 rounded"
         title="Delete task"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
