@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { getSettings } from '../../state/storage';
 import { Settings, Priority } from '../../types';
 
@@ -34,6 +34,7 @@ export default function AddTask({ onAdd }: AddTaskProps) {
   const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(true);
   const [charIndex, setCharIndex] = useState(0);
+  const dateDropdownRef = useRef<HTMLDivElement>(null);
 
   // Load settings
   useEffect(() => {
@@ -133,10 +134,20 @@ export default function AddTask({ onAdd }: AddTaskProps) {
     }
   };
 
-  const setPresetDate = (preset: 'today' | 'tomorrow' | 'nextWeek' | 'none') => {
+  const setPresetDate = (preset: 'weekAgo' | 'yesterday' | 'today' | 'tomorrow' | 'nextWeek' | 'none') => {
     const today = new Date();
     
     switch(preset) {
+      case 'weekAgo':
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        setDueDate(weekAgo.toISOString().split('T')[0]);
+        break;
+      case 'yesterday':
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        setDueDate(yesterday.toISOString().split('T')[0]);
+        break;
       case 'today':
         setDueDate(today.toISOString().split('T')[0]);
         break;
@@ -160,15 +171,15 @@ export default function AddTask({ onAdd }: AddTaskProps) {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.date-dropdown-container')) {
+      if (dateDropdownRef.current && !dateDropdownRef.current.contains(e.target as Node)) {
         setShowDateDropdown(false);
       }
     };
     
     if (showDateDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      // Use click instead of mousedown to allow button clicks to fire first
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [showDateDropdown]);
 
@@ -269,10 +280,14 @@ export default function AddTask({ onAdd }: AddTaskProps) {
           </div>
           
           {/* Due date dropdown */}
-          <div className="relative date-dropdown-container">
+          <div className="relative" ref={dateDropdownRef}>
             <button
               type="button"
-              onClick={() => setShowDateDropdown(!showDateDropdown)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowDateDropdown(!showDateDropdown);
+              }}
               className={`px-3 py-1 text-xs font-medium rounded-md border transition-all flex items-center gap-1 ${
                 dueDate 
                   ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800'
@@ -288,11 +303,41 @@ export default function AddTask({ onAdd }: AddTaskProps) {
             {showDateDropdown && (
               <div className="absolute top-full mt-1 left-0 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg z-10 p-3 min-w-[320px]">
                 {/* Quick presets */}
-                <div className="flex gap-2 mb-3">
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setPresetDate('weekAgo')}
+                    className={`px-3 py-2 text-sm font-medium rounded-md border transition-all ${
+                      (() => {
+                        const weekAgo = new Date();
+                        weekAgo.setDate(weekAgo.getDate() - 7);
+                        return dueDate === weekAgo.toISOString().split('T')[0];
+                      })()
+                        ? 'bg-red-600 text-white border-red-600 shadow-sm'
+                        : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30'
+                    }`}
+                  >
+                    Week Ago (Test)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPresetDate('yesterday')}
+                    className={`px-3 py-2 text-sm font-medium rounded-md border transition-all ${
+                      (() => {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        return dueDate === yesterday.toISOString().split('T')[0];
+                      })()
+                        ? 'bg-red-600 text-white border-red-600 shadow-sm'
+                        : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30'
+                    }`}
+                  >
+                    Yesterday (Test)
+                  </button>
                   <button
                     type="button"
                     onClick={() => setPresetDate('today')}
-                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md border transition-all ${
+                    className={`px-3 py-2 text-sm font-medium rounded-md border transition-all ${
                       dueDate === new Date().toISOString().split('T')[0]
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                         : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-900 border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-400'
@@ -303,7 +348,7 @@ export default function AddTask({ onAdd }: AddTaskProps) {
                   <button
                     type="button"
                     onClick={() => setPresetDate('tomorrow')}
-                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md border transition-all ${
+                    className={`px-3 py-2 text-sm font-medium rounded-md border transition-all ${
                       (() => {
                         const tomorrow = new Date();
                         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -318,7 +363,7 @@ export default function AddTask({ onAdd }: AddTaskProps) {
                   <button
                     type="button"
                     onClick={() => setPresetDate('nextWeek')}
-                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md border transition-all ${
+                    className={`px-3 py-2 text-sm font-medium rounded-md border transition-all ${
                       (() => {
                         const nextWeek = new Date();
                         nextWeek.setDate(nextWeek.getDate() + 7);
@@ -378,8 +423,7 @@ export default function AddTask({ onAdd }: AddTaskProps) {
                       <button
                         key={index}
                         type="button"
-                        onClick={() => !isPast && handleDateSelect(date)}
-                        disabled={isPast}
+                        onClick={() => handleDateSelect(date)}
                         className={`p-2 text-xs rounded transition-colors ${
                           isSelected
                             ? 'bg-indigo-600 text-white'
@@ -387,7 +431,7 @@ export default function AddTask({ onAdd }: AddTaskProps) {
                             ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium'
                             : isCurrentMonth
                             ? isPast
-                              ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                              ? 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700'
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-700'
                             : 'text-gray-400 dark:text-gray-600'
                         }`}

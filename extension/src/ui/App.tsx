@@ -328,7 +328,7 @@ export default function App({ onSnooze }: AppProps) {
                 }`}
               >
                 <span className="italic inline">"{quotesArray[currentQuoteIndex].text}" </span>
-                <span className="whitespace-nowrap inline">~{quotesArray[currentQuoteIndex].author}</span>
+                <span className="whitespace-nowrap inline">-{quotesArray[currentQuoteIndex].author}</span>
               </div>
             </div>
           )}
