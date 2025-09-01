@@ -12,9 +12,16 @@ import Settings from './components/Settings';
 interface AppProps {
   onSnooze?: (minutes: number) => void;
   onDismiss?: () => void;
-  isNewTab?: boolean;
+  isNewTab?: boolean;  // Experience 1: New Tab page
   customControls?: any; // Custom controls for special pages
+  isEnabledDomain?: boolean;  // Initial state, will be recalculated based on settings
+  onAddDomain?: () => Promise<boolean>;
 }
+
+// Three distinct header experiences:
+// 1. NEW TAB: Special new tab experience with "Default Tab" button
+// 2. DOMAIN MATCHED: Domain is in enabled list - shows "URL matches: domain.com" with Snooze/Dismiss timers
+// 3. DOMAIN UNMATCHED: Domain not in enabled list - shows "Enable for domain.com" with simple Dismiss
 
 interface UndoAction {
   type: 'delete' | 'complete' | 'reorder';
@@ -22,7 +29,7 @@ interface UndoAction {
   timestamp: number;
 }
 
-export default function App({ onSnooze, onDismiss, isNewTab = false, customControls }: AppProps) {
+export default function App({ onSnooze, onDismiss, isNewTab = false, customControls, isEnabledDomain: initialIsEnabledDomain = true, onAddDomain }: AppProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,8 +42,13 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
   const [undoHistory, setUndoHistory] = useState<UndoAction[]>([]);
   const [showUndoToast, setShowUndoToast] = useState(false);
   const [showUndoPrompt, setShowUndoPrompt] = useState(false);
+  const [isAddingDomain, setIsAddingDomain] = useState(false);
   const undoPromptTimer = useRef<number | null>(null);
   const currentDomain = getRootDomain(window.location.href);
+  
+  // Determine if current domain is enabled based on settings
+  // This is the single source of truth for domain matching
+  const isEnabledDomain = settings ? settings.domains.includes(currentDomain) : initialIsEnabledDomain;
 
   // Helper to format time display
   const formatTime = (minutes: number): string => {
@@ -113,6 +125,9 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
           setSettings(newSettings || null);
           if (newSettings) {
             applyTheme(newSettings.theme);
+            // The isEnabledDomain will automatically update since it's derived from settings
+            const isDomainEnabled = newSettings.domains.includes(currentDomain);
+            console.log(`[TABULA] Domain ${currentDomain} enabled status: ${isDomainEnabled}`);
           }
         }
       }
@@ -145,7 +160,7 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
       mediaQuery.removeEventListener('change', handleThemeChange);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [settings?.theme, undoHistory]);
+  }, [settings?.theme, undoHistory, currentDomain]);
 
   const loadInitialData = async () => {
     const [loadedTasks, loadedSettings] = await Promise.all([
@@ -302,8 +317,11 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
       if (isNewTab && onDismiss) {
         // For new tab, use special dismiss handler
         onDismiss();
+      } else if (!isEnabledDomain && onDismiss) {
+        // For non-enabled domains, just close the overlay
+        onDismiss();
       } else if (onSnooze) {
-        // For regular pages, dismiss is just a longer snooze
+        // For enabled domains, dismiss is just a longer snooze
         const minutes = settings?.dismissMinutes || 60;
         onSnooze(minutes);
       }
@@ -371,17 +389,46 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
                   <span className="underline">ta</span>ke <span className="underline">b</span>ack <span className="italic underline font-dramatic tracking-wide text-sm">your</span> <span className="underline">L</span>ife <span className="underline">a</span>gain
                 </p>
               </div>
-              {/* URL matches label */}
+              {/* URL matches label or Add Domain button */}
               {!isNewTab && (
                 <button
-                  onClick={() => {
-                    setActiveTab('settings');
-                    setScrollToDomains(true);
+                  onClick={async () => {
+                    if (isEnabledDomain) {
+                      setActiveTab('settings');
+                      setScrollToDomains(true);
+                    } else if (onAddDomain) {
+                      setIsAddingDomain(true);
+                      try {
+                        const success = await onAddDomain();
+                        if (success) {
+                          // The domain has been added to settings
+                          // After settings update, isEnabledDomain will automatically become true
+                          // Navigate to settings and scroll to domains just like URL matches
+                          setActiveTab('settings');
+                          setScrollToDomains(true);
+                        }
+                      } finally {
+                        setIsAddingDomain(false);
+                      }
+                    }
                   }}
-                  className="self-start sm:self-auto px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs transition-colors cursor-pointer whitespace-nowrap"
-                  title="Click to manage enabled domains"
+                  className={`self-start sm:self-auto px-3 py-1 rounded-lg text-xs transition-all cursor-pointer whitespace-nowrap ${
+                    isAddingDomain 
+                      ? 'bg-green-500 text-white' 
+                      : isEnabledDomain 
+                        ? 'bg-white/10 hover:bg-white/20 border border-white/20' 
+                        : 'bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold animate-pulse-slow shadow-lg'
+                  }`}
+                  title={isEnabledDomain ? "Click to manage enabled domains" : "Click to enable tabula on this domain"}
+                  disabled={isAddingDomain}
                 >
-                  URL matches: <span className="font-mono">{currentDomain}</span>
+                  {isAddingDomain ? (
+                    <>Adding domain...</>
+                  ) : isEnabledDomain ? (
+                    <>URL matches: <span className="font-mono">{currentDomain}</span></>
+                  ) : (
+                    <>⚡ Enable for <span className="font-mono">{currentDomain}</span></>
+                  )}
                 </button>
               )}
             </div>
@@ -391,7 +438,7 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
               customControls
             ) : (
               <div className="flex gap-2">
-                {!isNewTab && (
+                {!isNewTab && isEnabledDomain && (
                   <button
                     onClick={handleSnooze}
                     className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
@@ -404,27 +451,33 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
                 <button
                   onClick={handleDismiss}
                   className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
-                  title={isNewTab ? "Show Chrome's default new tab" : `Dismiss for ${settings?.dismissMinutes || 60} minutes`}
+                  title={isNewTab ? "Show Chrome's default new tab" : isEnabledDomain ? `Dismiss for ${settings?.dismissMinutes || 60} minutes` : "Close tabula"}
                 >
                   <span className="hidden xs:inline">{isNewTab ? 'Default Tab' : 'Dismiss'} </span>
-                  <span>{isNewTab ? '' : `(${formatTime(settings?.dismissMinutes || 60)})`}</span>
+                  <span>{isNewTab ? '' : isEnabledDomain ? `(${formatTime(settings?.dismissMinutes || 60)})` : ''}</span>
                 </button>
               </div>
             )}
           </div>
           <p className="text-white/80 mt-3 text-sm md:text-base">
-            Your life is precious. Consider before gifting your time to <span className="font-mono">
-              {(() => {
-                const lowerDomain = currentDomain.toLowerCase();
-                if (lowerDomain === 'facebook.com' || lowerDomain === 'instagram.com') {
-                  return 'Mark Zuckerberg';
-                } else if (lowerDomain === 'x.com' || lowerDomain === 'twitter.com') {
-                  return 'Elon Musk';
-                } else {
-                  return currentDomain;
-                }
-              })()}
-            </span>.
+            {isNewTab ? (
+              <>What do you have planned for today?</>
+            ) : isEnabledDomain ? (
+              <>Your life is precious. Consider before gifting your time to <span className="font-mono">
+                {(() => {
+                  const lowerDomain = currentDomain.toLowerCase();
+                  if (lowerDomain === 'facebook.com' || lowerDomain === 'instagram.com') {
+                    return 'Mark Zuckerberg';
+                  } else if (lowerDomain === 'x.com' || lowerDomain === 'twitter.com') {
+                    return 'Elon Musk';
+                  } else {
+                    return currentDomain;
+                  }
+                })()}
+              </span>.</>
+            ) : (
+              <>👆 Click the yellow button above to enable tabula on <span className="font-mono">{currentDomain}</span> and get reminded of your tasks when you visit this site.</>
+            )}
           </p>
         </div>
       </div>

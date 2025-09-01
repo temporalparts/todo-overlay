@@ -3,7 +3,7 @@ import { render } from 'preact';
 import { h } from 'preact';
 import App from '../ui/App';
 import { getRootDomain, isUrlInDomainList } from '../lib/domain';
-import { getSettings, isdomainSnoozed, setSnoozeForDomain } from '../state/storage';
+import { getSettings, isdomainSnoozed, setSnoozeForDomain, saveSettings } from '../state/storage';
 import '../styles/tailwind.css';
 
 // Singleton class to manage overlay
@@ -23,25 +23,31 @@ class OverlayManager {
     return OverlayManager.instance;
   }
 
-  async shouldShowOverlay(): Promise<boolean> {
+  async shouldShowOverlay(): Promise<{ show: boolean; isEnabledDomain: boolean }> {
     try {
       const settings = await getSettings();
-      if (!settings.autoOpenOnAllowlisted) return false;
-      
       const currentUrl = window.location.href;
-      if (!isUrlInDomainList(currentUrl, settings.domains)) return false;
+      const isEnabledDomain = isUrlInDomainList(currentUrl, settings.domains);
+      
+      if (!settings.autoOpenOnAllowlisted) {
+        return { show: false, isEnabledDomain };
+      }
+      
+      if (!isEnabledDomain) {
+        return { show: false, isEnabledDomain: false };
+      }
       
       const domain = getRootDomain(currentUrl);
       const isSnoozed = await isdomainSnoozed(domain);
-      return !isSnoozed;
+      return { show: !isSnoozed, isEnabledDomain: true };
     } catch (error) {
       // If extension context is invalidated, don't show overlay
       console.log('[TABULA] Error checking if should show overlay:', error);
-      return false;
+      return { show: false, isEnabledDomain: false };
     }
   }
 
-  async createOverlay() {
+  async createOverlay(isEnabledDomain: boolean = true) {
     // If overlay already exists, just return
     if (this.overlayRoot) {
       console.log('[TABULA] Overlay already exists, not creating another');
@@ -184,7 +190,10 @@ class OverlayManager {
     // Render app
     render(
       h(App, {
-        onSnooze: this.handleSnooze.bind(this)
+        onSnooze: this.handleSnooze.bind(this),
+        onDismiss: this.closeOverlay.bind(this),
+        isEnabledDomain,
+        onAddDomain: this.handleAddDomain.bind(this)
       }),
       appContainer
     );
@@ -338,6 +347,37 @@ class OverlayManager {
     }
   }
 
+  async handleAddDomain(): Promise<boolean> {
+    console.log('[TABULA] handleAddDomain called');
+    const domain = getRootDomain(window.location.href);
+    
+    try {
+      // Check if runtime is still connected
+      if (!browser.runtime?.id) {
+        console.error('[TABULA] Extension runtime disconnected, reloading page...');
+        window.location.reload();
+        return false;
+      }
+      
+      // Get current settings
+      const settings = await getSettings();
+      
+      // Add domain to the list
+      if (!settings.domains.includes(domain)) {
+        settings.domains.push(domain);
+        await saveSettings(settings);
+        console.log(`[TABULA] Added domain ${domain} to enabled list`);
+        
+        // Return success so the App component knows the domain was added
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('[TABULA] Error adding domain:', error);
+      return false;
+    }
+  }
+
   async initialize() {
     try {
       // Check if we should show on page load
@@ -349,11 +389,11 @@ class OverlayManager {
         return;
       }
       
-      const shouldShow = await this.shouldShowOverlay();
-      console.log('[TABULA] Should show overlay?', shouldShow);
+      const { show, isEnabledDomain } = await this.shouldShowOverlay();
+      console.log('[TABULA] Should show overlay?', show, 'Is enabled domain?', isEnabledDomain);
       
-      if (shouldShow) {
-        await this.createOverlay();
+      if (show) {
+        await this.createOverlay(isEnabledDomain);
       }
     } catch (error) {
       console.log('[TABULA] Error during initialization:', error);
@@ -378,15 +418,20 @@ if ((window as any).__tabulaInjected) {
         // Just respond to indicate content script is loaded
         return { status: 'ok' };
       } else if (message.type === 'OPEN_OVERLAY') {
-        await overlayManager.createOverlay();
+        // Check if domain is enabled when opening manually
+        const settings = await getSettings();
+        const currentUrl = window.location.href;
+        const isEnabledDomain = isUrlInDomainList(currentUrl, settings.domains);
+        await overlayManager.createOverlay(isEnabledDomain);
       } else if (message.type === 'CLOSE_OVERLAY') {
         overlayManager.closeOverlay();
       } else if (message.type === 'SNOOZE_EXPIRED') {
         console.log('[TABULA] Snooze expired notification received');
         // Check if we should show overlay (user might have navigated away)
         const currentDomain = getRootDomain(window.location.href);
-        if (currentDomain === message.domain && await overlayManager.shouldShowOverlay()) {
-          await overlayManager.createOverlay();
+        const { show, isEnabledDomain } = await overlayManager.shouldShowOverlay();
+        if (currentDomain === message.domain && show) {
+          await overlayManager.createOverlay(isEnabledDomain);
         }
       }
     } catch (error) {
