@@ -3,6 +3,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { getSettings } from '../../state/storage';
 import { Settings, Priority } from '../../types';
 import TaskForm from './shared/TaskForm';
+import { getLocalDateString } from '../../lib/date';
 
 interface AddTaskProps {
   onAdd: (title: string, priority?: Priority, dueDate?: string) => void;
@@ -103,7 +104,7 @@ export default function AddTask({ onAdd }: AddTaskProps) {
       onSave={handleAdd}
       submitLabel="Add"
       placeholder={placeholder}
-      initialDueDate={new Date().toISOString().split('T')[0]}
+      initialDueDate={getLocalDateString()}
       autoFocus={true}
       showTestDateOptions={false}
       resetOnClear={true}

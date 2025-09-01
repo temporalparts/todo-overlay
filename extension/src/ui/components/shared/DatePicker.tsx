@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
+import { getLocalDateString } from '../../../lib/date';
 
 interface DatePickerProps {
   value: string; // Date string in YYYY-MM-DD format or empty
@@ -108,25 +109,25 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
       case 'weekAgo':
         const weekAgo = new Date(today);
         weekAgo.setDate(weekAgo.getDate() - 7);
-        onChange(weekAgo.toISOString().split('T')[0]);
+        onChange(getLocalDateString(weekAgo));
         break;
       case 'yesterday':
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        onChange(yesterday.toISOString().split('T')[0]);
+        onChange(getLocalDateString(yesterday));
         break;
       case 'today':
-        onChange(today.toISOString().split('T')[0]);
+        onChange(getLocalDateString(today));
         break;
       case 'tomorrow':
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        onChange(tomorrow.toISOString().split('T')[0]);
+        onChange(getLocalDateString(tomorrow));
         break;
       case 'nextWeek':
         const nextWeek = new Date(today);
         nextWeek.setDate(nextWeek.getDate() + 7);
-        onChange(nextWeek.toISOString().split('T')[0]);
+        onChange(getLocalDateString(nextWeek));
         break;
       case 'none':
         onChange('');
@@ -162,10 +163,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
   };
 
   const handleDateSelect = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    onChange(`${year}-${month}-${day}`);
+    onChange(getLocalDateString(date));
     setShowDropdown(false);
     
     // Return focus to the date picker button
@@ -229,7 +227,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
                     (() => {
                       const weekAgo = new Date();
                       weekAgo.setDate(weekAgo.getDate() - 7);
-                      return value === weekAgo.toISOString().split('T')[0];
+                      return value === getLocalDateString(weekAgo);
                     })()
                       ? 'bg-red-600 text-white border-red-600 shadow-sm'
                       : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30'
@@ -244,7 +242,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
                     (() => {
                       const yesterday = new Date();
                       yesterday.setDate(yesterday.getDate() - 1);
-                      return value === yesterday.toISOString().split('T')[0];
+                      return value === getLocalDateString(yesterday);
                     })()
                       ? 'bg-red-600 text-white border-red-600 shadow-sm'
                       : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30'
@@ -258,7 +256,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
               type="button"
               onClick={() => setPresetDate('today')}
               className={`px-3 py-2 text-sm font-medium rounded-md border transition-all ${
-                value === new Date().toISOString().split('T')[0]
+                value === getLocalDateString()
                   ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                   : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-900 border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-400'
               }`}
@@ -272,7 +270,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
                 (() => {
                   const tomorrow = new Date();
                   tomorrow.setDate(tomorrow.getDate() + 1);
-                  return value === tomorrow.toISOString().split('T')[0];
+                  return value === getLocalDateString(tomorrow);
                 })()
                   ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                   : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-900 border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-400'
@@ -288,7 +286,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
                   (() => {
                     const nextWeek = new Date();
                     nextWeek.setDate(nextWeek.getDate() + 7);
-                    return value === nextWeek.toISOString().split('T')[0];
+                    return value === getLocalDateString(nextWeek);
                   })()
                     ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                     : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-900 border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-400'
@@ -338,7 +336,7 @@ export default function DatePicker({ value, onChange, showTestOptions = false }:
             {generateCalendarDays().map((date, index) => {
               const isCurrentMonth = date.getMonth() === calendarMonth.getMonth();
               const isToday = date.toDateString() === new Date().toDateString();
-              const isSelected = date.toISOString().split('T')[0] === value;
+              const isSelected = getLocalDateString(date) === value;
               const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
               
               return (

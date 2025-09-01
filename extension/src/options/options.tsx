@@ -3,6 +3,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { Settings } from '../types';
 import { getSettings, saveSettings, getTasks, saveTasks } from '../state/storage';
 import { getRootDomain } from '../lib/domain';
+import { getLocalDateString } from '../lib/date';
 import '../styles/tailwind.css';
 
 function Options() {
@@ -67,7 +68,7 @@ function Options() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `nudgenotes-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `nudgenotes-backup-${getLocalDateString()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

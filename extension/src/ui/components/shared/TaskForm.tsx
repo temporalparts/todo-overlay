@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { Priority } from '../../../types';
 import PrioritySelector from './PrioritySelector';
 import DatePicker from './DatePicker';
+import { getLocalDateString } from '../../../lib/date';
 
 interface TaskFormProps {
   initialTitle?: string;
@@ -56,7 +57,7 @@ export default function TaskForm({
     if (!showCancel) {
       setTitle('');
       setPriority(undefined);
-      setDueDate(new Date().toISOString().split('T')[0]);
+      setDueDate(getLocalDateString());
       setShowError(false);
       setShowOptions(false);
       // Return focus to input after submission
@@ -71,7 +72,7 @@ export default function TaskForm({
     } else if (resetOnClear && !value) {
       // Reset priority and date when text is cleared (only for add mode)
       setPriority(undefined);
-      setDueDate(new Date().toISOString().split('T')[0]);
+      setDueDate(getLocalDateString());
     }
   };
 

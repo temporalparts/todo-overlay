@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Task } from '../../types';
 import TaskItem from './TaskItem';
+import { getLocalDateString, isBeforeToday } from '../../lib/date';
 
 interface TaskListProps {
   tasks: Task[];
@@ -69,10 +70,7 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
   // Check if a task is overdue
   const isOverdue = (task: Task) => {
     if (!task.dueDate || task.completed) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dueDate = new Date(task.dueDate + 'T00:00:00');
-    return dueDate < today;
+    return isBeforeToday(task.dueDate);
   };
 
   const baseActiveTasks = tasks.filter(t => !t.completed && !isOverdue(t));
@@ -109,9 +107,9 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
     return priorityA - priorityB;
   });
   
-  // Use temporary order during drag, otherwise use base order
+  // Use temporary order during drag, otherwise use sorted order for past, base order for present
   const activeTasks = draggedTask && tempActiveTasks.length > 0 ? tempActiveTasks : baseActiveTasks;
-  const overdueTasks = draggedTask && tempOverdueTasks.length > 0 ? tempOverdueTasks : sortedOverdueTasks;
+  const overdueTasks = draggedTask && tempOverdueTasks.length > 0 ? tempOverdueTasks : baseOverdueTasks;
   
   // Check if tasks are currently sorted
   const checkIfSorted = (taskList: Task[]) => {
@@ -130,19 +128,14 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
   };
   
   const isPresentSorted = checkIfSorted(baseActiveTasks);
-  const isPastSorted = checkIfSorted(sortedOverdueTasks);
+  const isPastSorted = checkIfSorted(baseOverdueTasks);
 
   const handleDragStart = (e: DragEvent, task: Task, section: 'past' | 'present') => {
     setDraggedTask(task);
     setDragSection(section);
-    if (section === 'present') {
-      setTempActiveTasks([...baseActiveTasks]);
-      setTempOverdueTasks([...sortedOverdueTasks]);
-    } else {
-      // When dragging from past, initialize both temp arrays for potential cross-section drop
-      setTempOverdueTasks([...sortedOverdueTasks]);
-      setTempActiveTasks([...baseActiveTasks]);
-    }
+    // Always initialize both temp arrays for all drag operations
+    setTempActiveTasks([...baseActiveTasks]);
+    setTempOverdueTasks([...baseOverdueTasks]);
     e.dataTransfer!.effectAllowed = 'move';
     e.dataTransfer!.setData('text/html', ''); // Firefox requires this
   };
@@ -153,16 +146,24 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
     // Allow dragging from past to present (but not present to past)
     if (dragSection === 'past' && section === 'present') {
       // Moving from past to present - will update date to today
-      const draggedIndex = tempActiveTasks.findIndex(t => t.id === draggedTask.id);
+      const draggedIndexInPresent = tempActiveTasks.findIndex(t => t.id === draggedTask.id);
+      const draggedIndexInPast = tempOverdueTasks.findIndex(t => t.id === draggedTask.id);
       
       // If target task is null (empty present section), or target doesn't exist, add to end
       const targetIndex = task ? tempActiveTasks.findIndex(t => t.id === task.id) : -1;
       
       const newTasks = [...tempActiveTasks];
+      const newOverdueTasks = [...tempOverdueTasks];
+      
       // If dragged task is not yet in present section, add it
-      if (draggedIndex === -1) {
+      if (draggedIndexInPresent === -1) {
+        // Remove from past section first
+        if (draggedIndexInPast !== -1) {
+          newOverdueTasks.splice(draggedIndexInPast, 1);
+        }
+        
         // Insert the dragged task with today's date
-        const updatedTask = { ...draggedTask, dueDate: new Date().toISOString().split('T')[0] };
+        const updatedTask = { ...draggedTask, dueDate: getLocalDateString() };
         if (targetIndex === -1) {
           // Add to end if no target (empty section or dragging to empty area)
           newTasks.push(updatedTask);
@@ -170,13 +171,10 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
           // Insert at target position
           newTasks.splice(targetIndex, 0, updatedTask);
         }
-        // Remove from past section
-        const newOverdueTasks = tempOverdueTasks.filter(t => t.id !== draggedTask.id);
-        setTempOverdueTasks(newOverdueTasks);
       } else {
         // Already in present, just reorder
-        newTasks.splice(draggedIndex, 1);
-        const updatedTask = { ...draggedTask, dueDate: new Date().toISOString().split('T')[0] };
+        newTasks.splice(draggedIndexInPresent, 1);
+        const updatedTask = { ...draggedTask, dueDate: getLocalDateString() };
         if (targetIndex === -1) {
           newTasks.push(updatedTask);
         } else {
@@ -185,28 +183,45 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
       }
       
       setTempActiveTasks(newTasks);
+      setTempOverdueTasks(newOverdueTasks);
     } else if (dragSection === section) {
-      // Same section reordering (only if we have a target task)
-      if (section === 'present' && task) {
+      // Same section reordering
+      if (section === 'present') {
         const draggedIndex = tempActiveTasks.findIndex(t => t.id === draggedTask.id);
-        const targetIndex = tempActiveTasks.findIndex(t => t.id === task.id);
+        const targetIndex = task ? tempActiveTasks.findIndex(t => t.id === task.id) : -1;
         
-        if (draggedIndex === -1 || targetIndex === -1) return;
+        if (draggedIndex === -1) return;
         
         const newTasks = [...tempActiveTasks];
         newTasks.splice(draggedIndex, 1);
-        newTasks.splice(targetIndex, 0, draggedTask);
+        
+        if (targetIndex === -1 || !task) {
+          // Add to end if dragging to empty space
+          newTasks.push(draggedTask);
+        } else {
+          // Insert at target position
+          const adjustedTarget = targetIndex > draggedIndex ? targetIndex - 1 : targetIndex;
+          newTasks.splice(adjustedTarget, 0, draggedTask);
+        }
         
         setTempActiveTasks(newTasks);
-      } else if (section === 'past' && task) {
+      } else if (section === 'past') {
         const draggedIndex = tempOverdueTasks.findIndex(t => t.id === draggedTask.id);
-        const targetIndex = tempOverdueTasks.findIndex(t => t.id === task.id);
+        const targetIndex = task ? tempOverdueTasks.findIndex(t => t.id === task.id) : -1;
         
-        if (draggedIndex === -1 || targetIndex === -1) return;
+        if (draggedIndex === -1) return;
         
         const newTasks = [...tempOverdueTasks];
         newTasks.splice(draggedIndex, 1);
-        newTasks.splice(targetIndex, 0, draggedTask);
+        
+        if (targetIndex === -1 || !task) {
+          // Add to end if dragging to empty space
+          newTasks.push(draggedTask);
+        } else {
+          // Insert at target position
+          const adjustedTarget = targetIndex > draggedIndex ? targetIndex - 1 : targetIndex;
+          newTasks.splice(adjustedTarget, 0, draggedTask);
+        }
         
         setTempOverdueTasks(newTasks);
       }
@@ -225,15 +240,9 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
     if (draggedTask) {
       // Handle cross-section drag from Past to Present
       if (dragSection === 'past' && section === 'present') {
-        // Moving from past to present - update the task's due date to today
-        const updatedTasks = tempActiveTasks.map(task => 
-          task.id === draggedTask.id 
-            ? { ...task, dueDate: new Date().toISOString().split('T')[0] }
-            : task
-        );
-        
-        // Combine all sections
-        const newTasks = [...tempOverdueTasks, ...updatedTasks, ...completedTasks];
+        // The task has already been moved to tempActiveTasks with today's date in handleDragEnter
+        // Just combine all sections using the modified temp arrays
+        const newTasks = [...tempOverdueTasks, ...tempActiveTasks, ...completedTasks];
         
         // SAFEGUARD: Ensure we're not losing tasks
         const originalCount = tasks.length;
@@ -248,7 +257,8 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
       else if (dragSection === section) {
         if (section === 'present' && tempActiveTasks.length > 0) {
           // Commit the temporary order for present section
-          const newTasks = [...sortedOverdueTasks, ...tempActiveTasks, ...completedTasks];
+          // Use tempOverdueTasks since it may have been modified during drag
+          const newTasks = [...tempOverdueTasks, ...tempActiveTasks, ...completedTasks];
           
           // SAFEGUARD: Ensure we're not losing tasks
           const originalCount = tasks.length;
@@ -258,9 +268,10 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
           } else {
             console.error('[TABULA] Task count mismatch prevented data loss. Original:', originalCount, 'New:', newCount);
           }
-        } else if (section === 'past' && tempOverdueTasks.length > 0) {
+        } else if (section === 'past') {
           // Commit the temporary order for past section
-          const newTasks = [...tempOverdueTasks, ...baseActiveTasks, ...completedTasks];
+          // Use tempActiveTasks since it may have been modified during drag
+          const newTasks = [...tempOverdueTasks, ...tempActiveTasks, ...completedTasks];
           
           // SAFEGUARD: Ensure we're not losing tasks
           const originalCount = tasks.length;
@@ -295,7 +306,7 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
 
   const handleSortPresent = () => {
     if (!isPresentSorted) {
-      const sortedTasks = [...sortedOverdueTasks, ...sortActiveTasks(activeTasks), ...completedTasks];
+      const sortedTasks = [...baseOverdueTasks, ...sortActiveTasks(baseActiveTasks), ...completedTasks];
       
       // SAFEGUARD: Ensure we're not losing tasks
       const originalCount = tasks.length;
@@ -310,8 +321,8 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
 
   const handleSortPast = () => {
     if (!isPastSorted) {
-      const sortedPastTasks = sortActiveTasks([...overdueTasks]);
-      const sortedTasks = [...sortedPastTasks, ...activeTasks, ...completedTasks];
+      const sortedPastTasks = sortActiveTasks([...baseOverdueTasks]);
+      const sortedTasks = [...sortedPastTasks, ...baseActiveTasks, ...completedTasks];
       
       // SAFEGUARD: Ensure we're not losing tasks
       const originalCount = tasks.length;
@@ -469,9 +480,10 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
           ) : (
             <div 
               className="p-8 border-2 border-dashed border-gray-300 dark:border-zinc-600 rounded-lg text-center text-gray-500 dark:text-gray-400"
-              onDragOver={handleDragOver}
               onDragEnter={(e) => handleDragEnter(e, null, 'present')}
+              onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, 'present')}
+              onDragEnd={handleDragEnd}
             >
               <p className="text-sm">Drag tasks from Past to make them current</p>
             </div>

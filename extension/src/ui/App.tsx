@@ -4,6 +4,7 @@ import browser from 'webextension-polyfill';
 import { Task, Settings as SettingsType, Priority } from '../types';
 import { getTasks, saveTasks, getSettings } from '../state/storage';
 import { getRootDomain } from '../lib/domain';
+import { getLocalDateString } from '../lib/date';
 import { getShuffledQuotes, Quote } from '../data/quotes';
 import TaskList from './components/TaskList';
 import AddTask from './components/AddTask';
@@ -45,6 +46,7 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
   const [isAddingDomain, setIsAddingDomain] = useState(false);
   const undoPromptTimer = useRef<number | null>(null);
   const currentDomain = getRootDomain(window.location.href);
+  const isUpdatingStorage = useRef(false);
   
   // Determine if current domain is enabled based on settings
   // This is the single source of truth for domain matching
@@ -115,19 +117,15 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
     // Listen for storage changes from other tabs
     const handleStorageChange = (changes: any, areaName: string) => {
       if (areaName === 'local') {
-        if (changes.tasks) {
-          console.log('[TABULA] Tasks updated from another tab');
+        if (changes.tasks && !isUpdatingStorage.current) {
           setTasks(changes.tasks.newValue || []);
         }
         if (changes.settings) {
-          console.log('[TABULA] Settings updated from another tab');
           const newSettings = changes.settings.newValue;
           setSettings(newSettings || null);
           if (newSettings) {
             applyTheme(newSettings.theme);
             // The isEnabledDomain will automatically update since it's derived from settings
-            const isDomainEnabled = newSettings.domains.includes(currentDomain);
-            console.log(`[TABULA] Domain ${currentDomain} enabled status: ${isDomainEnabled}`);
           }
         }
       }
@@ -199,7 +197,9 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
     const updatedTasks = [newTask, ...tasks];
     
     setTasks(updatedTasks);
+    isUpdatingStorage.current = true;
     await saveTasks(updatedTasks);
+    isUpdatingStorage.current = false;
   };
 
   const addToUndoHistory = (type: 'delete' | 'complete' | 'reorder', previousTasks: Task[]) => {
@@ -230,7 +230,9 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
     
     const [lastAction, ...remainingHistory] = undoHistory;
     setTasks(lastAction.previousTasks);
+    isUpdatingStorage.current = true;
     await saveTasks(lastAction.previousTasks);
+    isUpdatingStorage.current = false;
     setUndoHistory(remainingHistory);
     
     // Hide undo prompt
@@ -260,7 +262,9 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
       return task;
     });
     setTasks(updatedTasks);
+    isUpdatingStorage.current = true;
     await saveTasks(updatedTasks);
+    isUpdatingStorage.current = false;
   };
 
   const deleteTask = async (id: string) => {
@@ -269,7 +273,9 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
     
     const updatedTasks = tasks.filter(task => task.id !== id);
     setTasks(updatedTasks);
+    isUpdatingStorage.current = true;
     await saveTasks(updatedTasks);
+    isUpdatingStorage.current = false;
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
@@ -296,11 +302,12 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
     addToUndoHistory('reorder', tasks);
     
     setTasks(updatedTasks);
+    isUpdatingStorage.current = true;
     await saveTasks(updatedTasks);
+    isUpdatingStorage.current = false;
   };
 
   const handleSnooze = () => {
-    console.log('[TABULA App] Snooze button clicked');
     try {
       const minutes = settings?.snoozeMinutes || 15;
       if (onSnooze) {
@@ -312,7 +319,6 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
   };
 
   const handleDismiss = () => {
-    console.log('[TABULA App] Dismiss button clicked');
     try {
       if (isNewTab && onDismiss) {
         // For new tab, use special dismiss handler
