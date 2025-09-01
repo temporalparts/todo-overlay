@@ -10,7 +10,10 @@ import AddTask from './components/AddTask';
 import Settings from './components/Settings';
 
 interface AppProps {
-  onSnooze: (minutes: number) => void;
+  onSnooze?: (minutes: number) => void;
+  onDismiss?: () => void;
+  isNewTab?: boolean;
+  customControls?: any; // Custom controls for special pages
 }
 
 interface UndoAction {
@@ -19,7 +22,7 @@ interface UndoAction {
   timestamp: number;
 }
 
-export default function App({ onSnooze }: AppProps) {
+export default function App({ onSnooze, onDismiss, isNewTab = false, customControls }: AppProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -285,7 +288,9 @@ export default function App({ onSnooze }: AppProps) {
     console.log('[TABULA App] Snooze button clicked');
     try {
       const minutes = settings?.snoozeMinutes || 15;
-      onSnooze(minutes);
+      if (onSnooze) {
+        onSnooze(minutes);
+      }
     } catch (error) {
       console.error('[TABULA App] Error calling onSnooze:', error);
     }
@@ -294,10 +299,16 @@ export default function App({ onSnooze }: AppProps) {
   const handleDismiss = () => {
     console.log('[TABULA App] Dismiss button clicked');
     try {
-      const minutes = settings?.dismissMinutes || 60;
-      onSnooze(minutes);
+      if (isNewTab && onDismiss) {
+        // For new tab, use special dismiss handler
+        onDismiss();
+      } else if (onSnooze) {
+        // For regular pages, dismiss is just a longer snooze
+        const minutes = settings?.dismissMinutes || 60;
+        onSnooze(minutes);
+      }
     } catch (error) {
-      console.error('[TABULA App] Error calling onSnooze:', error);
+      console.error('[TABULA App] Error calling dismiss/snooze:', error);
     }
   };
 
@@ -361,37 +372,45 @@ export default function App({ onSnooze }: AppProps) {
                 </p>
               </div>
               {/* URL matches label */}
-              <button
-                onClick={() => {
-                  setActiveTab('settings');
-                  setScrollToDomains(true);
-                }}
-                className="self-start sm:self-auto px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs transition-colors cursor-pointer whitespace-nowrap"
-                title="Click to manage enabled domains"
-              >
-                URL matches: <span className="font-mono">{currentDomain}</span>
-              </button>
+              {!isNewTab && (
+                <button
+                  onClick={() => {
+                    setActiveTab('settings');
+                    setScrollToDomains(true);
+                  }}
+                  className="self-start sm:self-auto px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs transition-colors cursor-pointer whitespace-nowrap"
+                  title="Click to manage enabled domains"
+                >
+                  URL matches: <span className="font-mono">{currentDomain}</span>
+                </button>
+              )}
             </div>
             
             {/* Right side - Action buttons */}
-            <div className="flex gap-2">
-              <button
-                onClick={handleSnooze}
-                className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
-                title={`Snooze for ${settings?.snoozeMinutes || 15} minutes`}
-              >
-                <span className="hidden xs:inline">Snooze </span>
-                <span>({formatTime(settings?.snoozeMinutes || 15)})</span>
-              </button>
-              <button
-                onClick={handleDismiss}
-                className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
-                title={`Dismiss for ${settings?.dismissMinutes || 60} minutes`}
-              >
-                <span className="hidden xs:inline">Dismiss </span>
-                <span>({formatTime(settings?.dismissMinutes || 60)})</span>
-              </button>
-            </div>
+            {customControls ? (
+              customControls
+            ) : (
+              <div className="flex gap-2">
+                {!isNewTab && (
+                  <button
+                    onClick={handleSnooze}
+                    className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
+                    title={`Snooze for ${settings?.snoozeMinutes || 15} minutes`}
+                  >
+                    <span className="hidden xs:inline">Snooze </span>
+                    <span>({formatTime(settings?.snoozeMinutes || 15)})</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleDismiss}
+                  className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
+                  title={isNewTab ? "Show Chrome's default new tab" : `Dismiss for ${settings?.dismissMinutes || 60} minutes`}
+                >
+                  <span className="hidden xs:inline">{isNewTab ? 'Default Tab' : 'Dismiss'} </span>
+                  <span>{isNewTab ? '' : `(${formatTime(settings?.dismissMinutes || 60)})`}</span>
+                </button>
+              </div>
+            )}
           </div>
           <p className="text-white/80 mt-3 text-sm md:text-base">
             Your life is precious. Consider before gifting your time to <span className="font-mono">

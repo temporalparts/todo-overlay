@@ -20,6 +20,17 @@ async function injectContentScript(tabId: number) {
 // Handle icon click - inject content script and open overlay
 browser.action.onClicked.addListener(async (tab) => {
   console.log('[Background] Extension icon clicked');
+  
+  // Special handling for new tab page
+  if (tab.url && (tab.url.startsWith('chrome://newtab') || tab.url === 'chrome://new-tab-page/')) {
+    console.log('[Background] On new tab page, opening TABULA page');
+    // Open our custom TABULA page in the current tab
+    await browser.tabs.update(tab.id!, {
+      url: browser.runtime.getURL('tabula.html')
+    });
+    return;
+  }
+  
   if (tab.id) {
     // Check if content script is already injected
     try {
@@ -42,10 +53,20 @@ browser.action.onClicked.addListener(async (tab) => {
 // Track which tabs have had content script injected
 const injectedTabs = new Set<number>();
 
-// Auto-inject content script on allowed domains
+// Auto-inject content script on allowed domains and handle new tabs
 browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
     const settings = await getSettings();
+    
+    // Check if this is a new tab and the setting is enabled
+    if ((tab.url.startsWith('chrome://newtab') || tab.url === 'chrome://new-tab-page/') && settings.showOnNewTab) {
+      console.log('[Background] New tab detected with showOnNewTab enabled, redirecting to TABULA');
+      await browser.tabs.update(tabId, {
+        url: browser.runtime.getURL('tabula.html')
+      });
+      return;
+    }
+    
     const domain = getRootDomain(tab.url);
     
     if (settings.domains.includes(domain)) {

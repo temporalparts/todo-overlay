@@ -21,6 +21,7 @@ export interface Settings {
   enableQuoteRotation: boolean; // Whether to enable automatic quote rotation
   quoteRotationSeconds: number; // How often to rotate quotes (in seconds)
   enablePlaceholderRotation: boolean; // Whether to enable placeholder rotation in task input
+  showOnNewTab: boolean; // Whether to show TABULA on new tab pages
 }
 
 export interface SnoozeState {

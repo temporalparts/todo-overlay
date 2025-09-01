@@ -10,7 +10,8 @@ const DEFAULT_SETTINGS: Settings = {
   dismissMinutes: 60, // 60 minutes default
   enableQuoteRotation: true, // Enable quote rotation by default
   quoteRotationSeconds: 60, // 60 seconds default
-  enablePlaceholderRotation: true // Enable placeholder rotation by default
+  enablePlaceholderRotation: true, // Enable placeholder rotation by default
+  showOnNewTab: true // Show on new tab by default
 };
 
 // Tasks storage (using chrome.storage.local for more space)
@@ -46,6 +47,9 @@ export async function getSettings(): Promise<Settings> {
   }
   if (settings.enablePlaceholderRotation === undefined) {
     settings.enablePlaceholderRotation = DEFAULT_SETTINGS.enablePlaceholderRotation;
+  }
+  if (settings.showOnNewTab === undefined) {
+    settings.showOnNewTab = DEFAULT_SETTINGS.showOnNewTab;
   }
   
   return settings;

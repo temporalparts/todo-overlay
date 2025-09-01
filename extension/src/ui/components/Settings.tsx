@@ -179,6 +179,11 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
     setSettings(updatedSettings);
   };
 
+  const handleSave = async (updatedSettings: SettingsType) => {
+    await saveSettings(updatedSettings);
+    setSettings(updatedSettings);
+  };
+
   if (loading || !settings) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -298,6 +303,17 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
             />
             <span className="text-gray-700 dark:text-gray-300">
               Rotate task input placeholder text
+            </span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.showOnNewTab}
+              onChange={() => handleSave({ ...settings, showOnNewTab: !settings.showOnNewTab })}
+              className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span className="text-gray-700 dark:text-gray-300">
+              Show TABULA on new tab pages
             </span>
           </label>
         </div>
