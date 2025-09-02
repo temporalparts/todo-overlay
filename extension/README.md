@@ -58,6 +58,7 @@ npm run version:major # Increment major (0.1.0 → 1.0.0)
 ```bash
 npm run icons           # Generate PNG icons from SVG
 npm run generate-quotes # Update quotes database
+npm run zip            # Create versioned Chrome Web Store zip
 ```
 
 ## 🏗️ Architecture Overview
@@ -138,23 +139,27 @@ Before committing changes, verify:
 
 ## 🚢 Release Process
 
-1. **Update version**:
+1. **Build and bump version**:
    ```bash
-   npm run version:minor  # or :major, :bump
+   npm run build  # Automatically bumps patch version
+   # OR
+   npm run version:minor && npm run build:nobump  # For minor version
+   npm run version:major && npm run build:nobump  # For major version
    ```
 
-2. **Build production**:
+2. **Create Chrome Web Store package**:
    ```bash
-   npm run build
+   npm run zip  # Creates tabula-extension-v{version}.zip
    ```
+   The zip file will be versioned (e.g., `tabula-extension-v0.2.41.zip`) and placed in the extension directory.
 
-3. **Create ZIP for Chrome Store**:
-   ```bash
-   cd dist && zip -r ../tabula-extension.zip . && cd ..
-   ```
+3. **Upload to Chrome Web Store**:
+   - Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
+   - Upload the versioned zip file
+   - Submit for review
 
-4. **Test the ZIP**:
-   - Load in Chrome as unpacked extension
+4. **Test before uploading** (optional):
+   - Load the `dist/` folder in Chrome as unpacked extension
    - Verify all features work
 
 ## 💡 Development Tips
