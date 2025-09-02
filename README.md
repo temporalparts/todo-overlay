@@ -138,9 +138,10 @@ See [extension/README.md](extension/README.md) for detailed development docs.
 
 ## 💬 Community & Support
 
+- **[Leave a Review](https://chromewebstore.google.com/detail/tabula/ljcogekgnjdiknmficpiamehmlnemakg)** - If TABULA helps you, please leave a review on the Chrome Web Store!
 - **[Report Issues](https://github.com/temporalparts/todo-overlay/issues)** - Found a bug? Let us know!
 - **[Discussions](https://github.com/temporalparts/todo-overlay/discussions)** - Share ideas and get help
-- **[Support Development](https://ko-fi.com/temporalparts)** - If TABULA helps you, consider supporting it
+- **[Support Development](https://ko-fi.com/temporalparts)** - Consider supporting ongoing development
 
 ## 📄 License
 
