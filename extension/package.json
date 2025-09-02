@@ -1,7 +1,7 @@
 {
   "name": "tabula",
   "version": "0.2.41",
-  "description": "TABULA - Take Back Your Life Again. A focused task manager for reclaiming your time.",
+  "description": "Turns Reddit, YouTube & Twitter into your todo list. 100% private (no tracking), open-source, minimal permissions. Take Back Your Life Again.",
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
