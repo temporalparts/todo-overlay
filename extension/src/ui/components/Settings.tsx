@@ -9,10 +9,50 @@ interface SettingsProps {
   onScrollComplete?: () => void;
 }
 
+interface DomainRowProps {
+  domain: string;
+  onRemove: (domain: string) => void;
+  highlightOnCreate?: boolean;
+}
+
+function DomainRow({ domain, onRemove, highlightOnCreate = false }: DomainRowProps) {
+  const [isHighlighted, setIsHighlighted] = useState(highlightOnCreate);
+
+  useEffect(() => {
+    if (highlightOnCreate) {
+      setIsHighlighted(true);
+      const timer = setTimeout(() => {
+        setIsHighlighted(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightOnCreate]);
+
+  return (
+    <div className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-700 rounded-lg transition-all duration-300 ${
+      isHighlighted ? 'ring-2 ring-yellow-300 dark:ring-yellow-600' : ''
+    }`}>
+      <span className="text-gray-900 dark:text-white font-mono text-sm">
+        {domain}
+      </span>
+      <button
+        onClick={() => onRemove(domain)}
+        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+        title="Remove domain"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 export default function Settings({ scrollToDomains, onScrollComplete }: SettingsProps) {
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
+  const [justAddedDomains, setJustAddedDomains] = useState<Set<string>>(new Set());
   const domainsRef = useRef<HTMLDivElement>(null);
 
   // Helper to format time display for settings
@@ -64,7 +104,33 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
     const handleStorageChange = (changes: any, areaName: string) => {
       if (areaName === 'local' && changes.settings) {
         console.log('[TABULA Settings] Settings updated from another tab');
-        setSettings(changes.settings.newValue || null);
+        const oldSettings = changes.settings.oldValue;
+        const newSettings = changes.settings.newValue;
+        
+        if (oldSettings && newSettings) {
+          // Check if a new domain was added
+          const oldDomains = oldSettings.domains || [];
+          const newDomains = newSettings.domains || [];
+          
+          // Find newly added domains
+          const addedDomains = newDomains.filter((d: string) => !oldDomains.includes(d));
+          
+          // Highlight any newly added domains
+          addedDomains.forEach((domain: string) => {
+            setJustAddedDomains(prev => new Set([...prev, domain]));
+            
+            // Remove from just added after 2.5 seconds
+            setTimeout(() => {
+              setJustAddedDomains(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(domain);
+                return newSet;
+              });
+            }, 2500);
+          });
+        }
+        
+        setSettings(newSettings || null);
       }
     };
     
@@ -92,8 +158,29 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
       .replace(/\/$/, '')
       .toLowerCase();
     
-    if (!cleanDomain || settings.domains.includes(cleanDomain)) {
+    if (!cleanDomain) {
       setNewDomain('');
+      return;
+    }
+    
+    // Helper function to highlight a domain
+    const highlightDomain = (domain: string) => {
+      setJustAddedDomains(prev => new Set([...prev, domain]));
+      
+      // Remove from just added after 2.5 seconds (slightly longer than highlight duration)
+      setTimeout(() => {
+        setJustAddedDomains(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(domain);
+          return newSet;
+        });
+      }, 2500);
+    };
+    
+    // Check if domain already exists
+    if (settings.domains.includes(cleanDomain)) {
+      setNewDomain('');
+      highlightDomain(cleanDomain);
       return;
     }
     
@@ -105,6 +192,9 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
     await saveSettings(updatedSettings);
     setSettings(updatedSettings);
     setNewDomain('');
+    
+    // Highlight the newly added domain
+    highlightDomain(cleanDomain);
   };
 
   const handleRemoveDomain = async (domain: string) => {
@@ -429,20 +519,12 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
             </p>
           ) : (
             settings.domains.map(domain => (
-              <div key={domain} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-700 rounded-lg">
-                <span className="text-gray-900 dark:text-white font-mono text-sm">
-                  {domain}
-                </span>
-                <button
-                  onClick={() => handleRemoveDomain(domain)}
-                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                  title="Remove domain"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+              <DomainRow 
+                key={domain} 
+                domain={domain} 
+                onRemove={handleRemoveDomain}
+                highlightOnCreate={justAddedDomains.has(domain)}
+              />
             ))
           )}
         </div>
