@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import browser from 'webextension-polyfill';
 import { Task, Settings as SettingsType, Priority } from '../types';
 import { getTasks, saveTasks, getSettings } from '../state/storage';
-import { getRootDomain } from '../lib/domain';
+import { getRootDomain, isUrlInDomainList, matchesPattern, normalizeDomainPattern } from '../lib/domain';
 import { getLocalDateString } from '../lib/date';
 import { getShuffledQuotes, Quote } from '../data/quotes';
 import TaskList from './components/TaskList';
@@ -45,12 +45,23 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
   const [showUndoPrompt, setShowUndoPrompt] = useState(false);
   const [isAddingDomain, setIsAddingDomain] = useState(false);
   const undoPromptTimer = useRef<number | null>(null);
-  const currentDomain = getRootDomain(window.location.href);
+  const currentUrl = window.location.href;
+  const currentDomain = getRootDomain(currentUrl);
   const isUpdatingStorage = useRef(false);
   
-  // Determine if current domain is enabled based on settings
+  // Determine if current domain is enabled based on settings using new pattern matching
   // This is the single source of truth for domain matching
-  const isEnabledDomain = settings ? settings.domains.includes(currentDomain) : initialIsEnabledDomain;
+  const isEnabledDomain = settings ? isUrlInDomainList(currentUrl, settings.domains) : initialIsEnabledDomain;
+  
+  // Find which pattern matches the current URL
+  // We need to normalize each pattern just like isUrlInDomainList does
+  const matchedPattern = settings?.domains.find(pattern => 
+    matchesPattern(currentUrl, normalizeDomainPattern(pattern))
+  );
+  
+  // If we found a match, display the normalized version for consistency
+  // Otherwise fall back to the current domain
+  const displayPattern = matchedPattern ? normalizeDomainPattern(matchedPattern) : currentDomain;
 
   // Helper to format time display
   const formatTime = (minutes: number): string => {
@@ -431,7 +442,7 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
                   {isAddingDomain ? (
                     <>Adding domain...</>
                   ) : isEnabledDomain ? (
-                    <>URL matches: <span className="font-mono">{currentDomain}</span></>
+                    <>URL matches: <span className="font-mono">{displayPattern}</span></>
                   ) : (
                     <>⚡ Enable for <span className="font-mono">{currentDomain}</span></>
                   )}

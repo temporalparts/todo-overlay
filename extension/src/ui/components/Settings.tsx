@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import browser from 'webextension-polyfill';
 import { getSettings, saveSettings } from '../../state/storage';
 import { Settings as SettingsType } from '../../types';
+import { normalizeDomainPattern, validateDomainPattern } from '../../lib/domain';
 
 interface SettingsProps {
   scrollToDomains?: boolean;
@@ -53,6 +54,8 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
   const [justAddedDomains, setJustAddedDomains] = useState<Set<string>>(new Set());
+  const [domainError, setDomainError] = useState<string | null>(null);
+  const [showPatternHelp, setShowPatternHelp] = useState(false);
   const domainsRef = useRef<HTMLDivElement>(null);
 
   // Helper to format time display for settings
@@ -151,14 +154,21 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
   const handleAddDomain = async () => {
     if (!settings || !newDomain) return;
     
-    // Clean up domain (remove protocol, www, trailing slash)
-    const cleanDomain = newDomain
-      .replace(/^https?:\/\//, '')
-      .replace(/^www\./, '')
-      .replace(/\/$/, '')
-      .toLowerCase();
+    // Clear any previous error
+    setDomainError(null);
     
-    if (!cleanDomain) {
+    // Validate the domain pattern
+    const validationError = validateDomainPattern(newDomain);
+    if (validationError) {
+      setDomainError(validationError);
+      setTimeout(() => setDomainError(null), 4000);
+      return;
+    }
+    
+    // Normalize the pattern for storage
+    const normalizedPattern = normalizeDomainPattern(newDomain);
+    
+    if (!normalizedPattern) {
       setNewDomain('');
       return;
     }
@@ -177,24 +187,24 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
       }, 2500);
     };
     
-    // Check if domain already exists
-    if (settings.domains.includes(cleanDomain)) {
+    // Check if pattern already exists
+    if (settings.domains.includes(normalizedPattern)) {
       setNewDomain('');
-      highlightDomain(cleanDomain);
+      highlightDomain(normalizedPattern);
       return;
     }
     
     const updatedSettings = {
       ...settings,
-      domains: [...settings.domains, cleanDomain]
+      domains: [...settings.domains, normalizedPattern]
     };
     
     await saveSettings(updatedSettings);
     setSettings(updatedSettings);
     setNewDomain('');
     
-    // Highlight the newly added domain
-    highlightDomain(cleanDomain);
+    // Highlight the newly added pattern
+    highlightDomain(normalizedPattern);
   };
 
   const handleRemoveDomain = async (domain: string) => {
@@ -489,33 +499,126 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
         </h3>
         
         {/* Add domain form */}
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            value={newDomain}
-            onChange={(e) => setNewDomain(e.currentTarget.value)}
-            onKeyUp={(e) => {
-              // Support Enter, Numpad Enter, and with any modifier keys (Cmd/Ctrl/Shift)
-              if (e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter') {
-                handleAddDomain();
-              }
-            }}
-            placeholder="example.com"
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-          />
+        <div className="mb-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newDomain}
+              onChange={(e) => {
+                setNewDomain(e.currentTarget.value);
+                setDomainError(null); // Clear error on typing
+              }}
+              onKeyUp={(e) => {
+                // Support Enter, Numpad Enter, and with any modifier keys (Cmd/Ctrl/Shift)
+                if (e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter') {
+                  handleAddDomain();
+                }
+              }}
+              placeholder="e.g. github.com, docs.google.com, reddit.com/r/programming"
+              className={`flex-1 px-3 py-2 border rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors ${
+                domainError 
+                  ? 'border-red-500 dark:border-red-400' 
+                  : 'border-gray-300 dark:border-zinc-600'
+              }`}
+            />
+            <button
+              onClick={handleAddDomain}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Add Domain
+            </button>
+          </div>
+          {domainError && (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+              {domainError}
+            </p>
+          )}
+        </div>
+
+        {/* Pattern examples help text - collapsible */}
+        <div className="mb-4">
           <button
-            onClick={handleAddDomain}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            onClick={() => setShowPatternHelp(!showPatternHelp)}
+            className="w-full flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
           >
-            Add Domain
+            <span className="text-xs text-blue-700 dark:text-blue-300 font-medium flex items-center gap-2">
+              <svg 
+                className={`w-3 h-3 transition-transform ${showPatternHelp ? 'rotate-90' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M9 5l7 7-7 7" 
+                />
+              </svg>
+              Pattern Examples
+            </span>
+            <span className="text-xs text-blue-600 dark:text-blue-400">
+              {showPatternHelp ? 'Hide' : 'Show'} supported formats
+            </span>
           </button>
+          
+          {showPatternHelp && (
+            <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30">
+              <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-0.5">•</span>
+                  <div>
+                    <code className="bg-white/50 dark:bg-black/20 px-1 rounded">google.com</code>
+                    <span className="text-blue-500 dark:text-blue-300 ml-2">Matches all Google subdomains (mail, docs, etc.)</span>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-0.5">•</span>
+                  <div>
+                    <code className="bg-white/50 dark:bg-black/20 px-1 rounded">mail.google.com</code>
+                    <span className="text-blue-500 dark:text-blue-300 ml-2">Matches only Gmail specifically</span>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-0.5">•</span>
+                  <div>
+                    <code className="bg-white/50 dark:bg-black/20 px-1 rounded">github.com/facebook</code>
+                    <span className="text-blue-500 dark:text-blue-300 ml-2">Only paths starting with /facebook</span>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-0.5">•</span>
+                  <div>
+                    <code className="bg-white/50 dark:bg-black/20 px-1 rounded">reddit.com/r/programming</code>
+                    <span className="text-blue-500 dark:text-blue-300 ml-2">Only the programming subreddit</span>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-0.5">•</span>
+                  <div>
+                    <code className="bg-white/50 dark:bg-black/20 px-1 rounded">localhost:3000</code>
+                    <span className="text-blue-500 dark:text-blue-300 ml-2">Local development server</span>
+                  </div>
+                </li>
+              </ul>
+              <div className="mt-3 pt-3 border-t border-blue-100 dark:border-blue-800">
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">Important:</p>
+                <ul className="text-xs text-blue-500 dark:text-blue-300 space-y-0.5">
+                  <li>• http:// and https:// are automatically removed</li>
+                  <li>• Matching is case-insensitive</li>
+                  <li>• www. prefix is automatically ignored</li>
+                  <li>• Other protocols (ftp://, ws://) are not supported</li>
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Domain list */}
         <div className="space-y-2">
           {settings.domains.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              No domains enabled yet. Add domains above to get started.
+              No patterns enabled yet. Add domains or paths above to get started.
             </p>
           ) : (
             settings.domains.map(domain => (

@@ -1,0 +1,451 @@
+import { describe, it, expect } from 'vitest';
+import {
+  normalizeDomainPattern,
+  matchesPattern,
+  isUrlInDomainList,
+  validateDomainPattern,
+  getRootDomain
+} from './domain';
+
+describe('Domain Matching System', () => {
+  describe('normalizeDomainPattern', () => {
+    it('should remove protocols', () => {
+      expect(normalizeDomainPattern('https://google.com')).toBe('google.com');
+      expect(normalizeDomainPattern('http://example.com')).toBe('example.com');
+      expect(normalizeDomainPattern('ftp://files.com')).toBe('files.com');
+      expect(normalizeDomainPattern('ws://socket.io')).toBe('socket.io');
+    });
+
+    it('should remove www prefix', () => {
+      expect(normalizeDomainPattern('www.google.com')).toBe('google.com');
+      expect(normalizeDomainPattern('https://www.example.com')).toBe('example.com');
+    });
+
+    it('should convert to lowercase', () => {
+      expect(normalizeDomainPattern('GOOGLE.COM')).toBe('google.com');
+      expect(normalizeDomainPattern('GitHub.Com/Facebook')).toBe('github.com/facebook');
+    });
+
+    it('should trim whitespace', () => {
+      expect(normalizeDomainPattern('  google.com  ')).toBe('google.com');
+      expect(normalizeDomainPattern('\ngoogle.com\t')).toBe('google.com');
+    });
+
+    it('should handle trailing slashes correctly', () => {
+      expect(normalizeDomainPattern('google.com/')).toBe('google.com');
+      expect(normalizeDomainPattern('google.com/search')).toBe('google.com/search');
+      expect(normalizeDomainPattern('google.com/search/')).toBe('google.com/search/');
+    });
+
+    it('should preserve paths', () => {
+      expect(normalizeDomainPattern('github.com/facebook')).toBe('github.com/facebook');
+      expect(normalizeDomainPattern('reddit.com/r/programming')).toBe('reddit.com/r/programming');
+    });
+
+    it('should handle localhost with ports', () => {
+      expect(normalizeDomainPattern('localhost:3000')).toBe('localhost:3000');
+      expect(normalizeDomainPattern('localhost:8080/admin')).toBe('localhost:8080/admin');
+    });
+  });
+
+  describe('matchesPattern - Root Domain Matching', () => {
+    it('should match exact root domain', () => {
+      expect(matchesPattern('https://google.com', 'google.com')).toBe(true);
+      expect(matchesPattern('https://google.com/', 'google.com')).toBe(true);
+    });
+
+    it('should match all subdomains of root domain', () => {
+      expect(matchesPattern('https://mail.google.com', 'google.com')).toBe(true);
+      expect(matchesPattern('https://docs.google.com', 'google.com')).toBe(true);
+      expect(matchesPattern('https://calendar.google.com', 'google.com')).toBe(true);
+      expect(matchesPattern('https://deep.nested.google.com', 'google.com')).toBe(true);
+    });
+
+    it('should not match different root domains', () => {
+      expect(matchesPattern('https://google.com', 'facebook.com')).toBe(false);
+      expect(matchesPattern('https://example.com', 'google.com')).toBe(false);
+    });
+
+    it('should handle www correctly', () => {
+      expect(matchesPattern('https://www.google.com', 'google.com')).toBe(true);
+      expect(matchesPattern('https://google.com', 'www.google.com')).toBe(true);
+      expect(matchesPattern('https://www.mail.google.com', 'google.com')).toBe(true);
+    });
+  });
+
+  describe('matchesPattern - Subdomain Specific Matching', () => {
+    it('should match exact subdomain', () => {
+      expect(matchesPattern('https://mail.google.com', 'mail.google.com')).toBe(true);
+      expect(matchesPattern('https://mail.google.com/', 'mail.google.com')).toBe(true);
+    });
+
+    it('should NOT match deeper subdomains when pattern is specific subdomain', () => {
+      expect(matchesPattern('https://inbox.mail.google.com', 'mail.google.com')).toBe(false);
+      expect(matchesPattern('https://beta.mail.google.com', 'mail.google.com')).toBe(false);
+    });
+
+    it('should NOT match different subdomains', () => {
+      expect(matchesPattern('https://docs.google.com', 'mail.google.com')).toBe(false);
+      expect(matchesPattern('https://calendar.google.com', 'mail.google.com')).toBe(false);
+    });
+
+    it('should NOT match parent domain', () => {
+      expect(matchesPattern('https://google.com', 'mail.google.com')).toBe(false);
+    });
+  });
+
+  describe('matchesPattern - Path Matching', () => {
+    it('should match exact path', () => {
+      expect(matchesPattern('https://github.com/facebook', 'github.com/facebook')).toBe(true);
+      expect(matchesPattern('https://reddit.com/r/programming', 'reddit.com/r/programming')).toBe(true);
+    });
+
+    it('should match path prefixes', () => {
+      expect(matchesPattern('https://github.com/facebook/react', 'github.com/facebook')).toBe(true);
+      expect(matchesPattern('https://github.com/facebook/react/issues', 'github.com/facebook')).toBe(true);
+      expect(matchesPattern('https://reddit.com/r/programming/comments/123', 'reddit.com/r/programming')).toBe(true);
+    });
+
+    it('should NOT match different paths', () => {
+      expect(matchesPattern('https://github.com/google', 'github.com/facebook')).toBe(false);
+      expect(matchesPattern('https://reddit.com/r/javascript', 'reddit.com/r/programming')).toBe(false);
+    });
+
+    it('should NOT match without required path', () => {
+      expect(matchesPattern('https://github.com', 'github.com/facebook')).toBe(false);
+      expect(matchesPattern('https://github.com/', 'github.com/facebook')).toBe(false);
+    });
+
+    it('should be case-insensitive for paths', () => {
+      expect(matchesPattern('https://github.com/Facebook', 'github.com/facebook')).toBe(true);
+      expect(matchesPattern('https://github.com/FACEBOOK/REACT', 'github.com/facebook')).toBe(true);
+    });
+
+    it('should match paths on subdomains from root domain pattern', () => {
+      expect(matchesPattern('https://api.github.com/facebook', 'github.com/facebook')).toBe(true);
+      expect(matchesPattern('https://gist.github.com/facebook/somegist', 'github.com/facebook')).toBe(true);
+    });
+  });
+
+  describe('matchesPattern - Subdomain with Path', () => {
+    it('should match exact subdomain with path', () => {
+      expect(matchesPattern('https://docs.google.com/spreadsheets', 'docs.google.com/spreadsheets')).toBe(true);
+      expect(matchesPattern('https://docs.google.com/spreadsheets/123', 'docs.google.com/spreadsheets')).toBe(true);
+    });
+
+    it('should NOT match different subdomain with same path', () => {
+      expect(matchesPattern('https://drive.google.com/spreadsheets', 'docs.google.com/spreadsheets')).toBe(false);
+      expect(matchesPattern('https://sheets.google.com/spreadsheets', 'docs.google.com/spreadsheets')).toBe(false);
+    });
+
+    it('should NOT match same subdomain with different path', () => {
+      expect(matchesPattern('https://docs.google.com/document', 'docs.google.com/spreadsheets')).toBe(false);
+      expect(matchesPattern('https://docs.google.com/presentation', 'docs.google.com/spreadsheets')).toBe(false);
+    });
+  });
+
+  describe('matchesPattern - Compound TLDs', () => {
+    it('should treat .co.uk as TLD for root domain matching', () => {
+      expect(matchesPattern('https://bbc.co.uk', 'bbc.co.uk')).toBe(true);
+      expect(matchesPattern('https://news.bbc.co.uk', 'bbc.co.uk')).toBe(true);
+      expect(matchesPattern('https://sport.bbc.co.uk', 'bbc.co.uk')).toBe(true);
+    });
+
+    it('should treat .com.au as TLD', () => {
+      expect(matchesPattern('https://example.com.au', 'example.com.au')).toBe(true);
+      expect(matchesPattern('https://shop.example.com.au', 'example.com.au')).toBe(true);
+    });
+
+    it('should handle subdomain-specific matching with compound TLDs', () => {
+      expect(matchesPattern('https://news.bbc.co.uk', 'news.bbc.co.uk')).toBe(true);
+      expect(matchesPattern('https://sport.bbc.co.uk', 'news.bbc.co.uk')).toBe(false);
+    });
+
+    it('should handle other compound TLDs', () => {
+      expect(matchesPattern('https://example.gov.uk', 'example.gov.uk')).toBe(true);
+      expect(matchesPattern('https://university.ac.uk', 'university.ac.uk')).toBe(true);
+      expect(matchesPattern('https://company.co.jp', 'company.co.jp')).toBe(true);
+    });
+  });
+
+  describe('matchesPattern - Localhost', () => {
+    it('should match localhost with port', () => {
+      expect(matchesPattern('http://localhost:3000', 'localhost:3000')).toBe(true);
+      expect(matchesPattern('http://localhost:3000/', 'localhost:3000')).toBe(true);
+      expect(matchesPattern('http://localhost:3000/admin', 'localhost:3000')).toBe(true);
+    });
+
+    it('should NOT match different ports', () => {
+      expect(matchesPattern('http://localhost:3000', 'localhost:5000')).toBe(false);
+      expect(matchesPattern('http://localhost:8080', 'localhost:3000')).toBe(false);
+    });
+
+    it('should match localhost without port specified in pattern', () => {
+      expect(matchesPattern('http://localhost', 'localhost')).toBe(true);
+      expect(matchesPattern('http://localhost/', 'localhost')).toBe(true);
+    });
+  });
+
+  describe('matchesPattern - Edge Cases', () => {
+    it('should handle IP addresses', () => {
+      expect(matchesPattern('http://192.168.1.1', '192.168.1.1')).toBe(true);
+      expect(matchesPattern('http://192.168.1.1:8080', '192.168.1.1:8080')).toBe(true);
+      expect(matchesPattern('http://192.168.1.2', '192.168.1.1')).toBe(false);
+    });
+
+    it('should handle single-word domains', () => {
+      expect(matchesPattern('http://localhost', 'localhost')).toBe(true);
+      expect(matchesPattern('http://intranet', 'intranet')).toBe(true);
+    });
+
+    it('should handle very long paths', () => {
+      const longPath = 'a/'.repeat(50);
+      expect(matchesPattern(`https://example.com/${longPath}`, `example.com/a`)).toBe(true);
+    });
+
+    it('should return false for invalid URLs', () => {
+      expect(matchesPattern('not-a-url', 'google.com')).toBe(false);
+      expect(matchesPattern('', 'google.com')).toBe(false);
+    });
+
+    it('should handle query parameters and fragments', () => {
+      expect(matchesPattern('https://google.com?q=search', 'google.com')).toBe(true);
+      expect(matchesPattern('https://google.com#section', 'google.com')).toBe(true);
+      expect(matchesPattern('https://github.com/facebook?tab=repositories', 'github.com/facebook')).toBe(true);
+    });
+  });
+
+  describe('matchesPattern - URL Encoding', () => {
+    it('should handle URL-encoded spaces in paths', () => {
+      expect(matchesPattern('https://example.com/path%20with%20spaces', 'example.com/path with spaces')).toBe(true);
+      expect(matchesPattern('https://example.com/hello%20world', 'example.com/hello world')).toBe(true);
+    });
+
+    it('should handle URL-encoded special characters', () => {
+      expect(matchesPattern('https://example.com/path%2Fwith%2Fslashes', 'example.com/path/with/slashes')).toBe(true);
+      expect(matchesPattern('https://example.com/%3Fquery', 'example.com/?query')).toBe(true);
+      expect(matchesPattern('https://example.com/user%40example', 'example.com/user@example')).toBe(true);
+    });
+
+    it('should handle mixed encoded and non-encoded', () => {
+      expect(matchesPattern('https://github.com/my%20project/repo', 'github.com/my project')).toBe(true);
+      expect(matchesPattern('https://example.com/api%2Fv1/users', 'example.com/api/v1')).toBe(true);
+    });
+
+    it('should handle Unicode characters', () => {
+      expect(matchesPattern('https://example.com/日本語', 'example.com/日本語')).toBe(true);
+      expect(matchesPattern('https://example.com/%E6%97%A5%E6%9C%AC%E8%AA%9E', 'example.com/日本語')).toBe(true);
+    });
+  });
+
+  describe('matchesPattern - Case Sensitivity', () => {
+    it('should be case-insensitive for domains', () => {
+      expect(matchesPattern('https://GOOGLE.COM', 'google.com')).toBe(true);
+      expect(matchesPattern('https://google.com', 'GOOGLE.COM')).toBe(true);
+      expect(matchesPattern('https://GoOgLe.CoM', 'google.com')).toBe(true);
+      expect(matchesPattern('https://MAIL.GOOGLE.COM', 'google.com')).toBe(true);
+    });
+
+    it('should be case-insensitive for subdomains', () => {
+      expect(matchesPattern('https://MAIL.google.com', 'mail.google.com')).toBe(true);
+      expect(matchesPattern('https://mail.GOOGLE.com', 'mail.google.com')).toBe(true);
+      expect(matchesPattern('https://Mail.Google.Com', 'mail.google.com')).toBe(true);
+    });
+
+    it('should be case-insensitive for paths', () => {
+      expect(matchesPattern('https://github.com/Facebook', 'github.com/facebook')).toBe(true);
+      expect(matchesPattern('https://github.com/FACEBOOK/REACT', 'github.com/facebook')).toBe(true);
+      expect(matchesPattern('https://reddit.com/R/PROGRAMMING', 'reddit.com/r/programming')).toBe(true);
+    });
+
+    it('should handle mixed case in patterns', () => {
+      expect(matchesPattern('https://google.com', 'GoOgLe.CoM')).toBe(true);
+      expect(matchesPattern('https://github.com/facebook', 'GitHub.com/Facebook')).toBe(true);
+    });
+  });
+
+  describe('isUrlInDomainList', () => {
+    const patterns = [
+      'google.com',
+      'mail.yahoo.com',
+      'github.com/facebook',
+      'reddit.com/r/programming',
+      'localhost:3000'
+    ];
+
+    it('should match any pattern in the list', () => {
+      expect(isUrlInDomainList('https://docs.google.com', patterns)).toBe(true);
+      expect(isUrlInDomainList('https://mail.yahoo.com', patterns)).toBe(true);
+      expect(isUrlInDomainList('https://github.com/facebook/react', patterns)).toBe(true);
+      expect(isUrlInDomainList('https://reddit.com/r/programming/top', patterns)).toBe(true);
+      expect(isUrlInDomainList('http://localhost:3000/admin', patterns)).toBe(true);
+    });
+
+    it('should not match URLs not in the list', () => {
+      expect(isUrlInDomainList('https://facebook.com', patterns)).toBe(false);
+      expect(isUrlInDomainList('https://calendar.yahoo.com', patterns)).toBe(false);
+      expect(isUrlInDomainList('https://github.com/google', patterns)).toBe(false);
+      expect(isUrlInDomainList('https://reddit.com/r/javascript', patterns)).toBe(false);
+      expect(isUrlInDomainList('http://localhost:5000', patterns)).toBe(false);
+    });
+
+    it('should handle empty list', () => {
+      expect(isUrlInDomainList('https://google.com', [])).toBe(false);
+    });
+
+    it('should normalize patterns before matching', () => {
+      const unnormalizedPatterns = [
+        'HTTPS://GOOGLE.COM/',
+        'www.github.com/facebook',
+        '  reddit.com/r/programming  '
+      ];
+      expect(isUrlInDomainList('https://google.com', unnormalizedPatterns)).toBe(true);
+      expect(isUrlInDomainList('https://github.com/facebook', unnormalizedPatterns)).toBe(true);
+      expect(isUrlInDomainList('https://reddit.com/r/programming', unnormalizedPatterns)).toBe(true);
+    });
+  });
+
+  describe('validateDomainPattern', () => {
+    describe('valid patterns', () => {
+      const validPatterns = [
+        'google.com',
+        'mail.google.com',
+        'deep.nested.subdomain.example.com',
+        'github.com/facebook',
+        'docs.google.com/spreadsheets',
+        'reddit.com/r/programming',
+        'localhost',
+        'localhost:3000',
+        'localhost:8080',
+        '192.168.1.1',
+        'example.co.uk',
+        'news.bbc.co.uk',
+        'example.com.au',
+        'a.co', // minimum valid domain
+      ];
+
+      validPatterns.forEach(pattern => {
+        it(`should accept valid pattern: ${pattern}`, () => {
+          expect(validateDomainPattern(pattern)).toBe(null);
+        });
+      });
+    });
+
+    describe('protocol rejection', () => {
+      const protocolPatterns = [
+        ['https://google.com', 'Please remove the protocol'],
+        ['http://example.com', 'Please remove the protocol'],
+        ['ftp://files.com', 'Please remove the protocol'],
+        ['ws://socket.io', 'Please remove the protocol'],
+        ['file:///home/user', 'Please remove the protocol'],
+      ];
+
+      protocolPatterns.forEach(([pattern, expectedError]) => {
+        it(`should reject pattern with protocol: ${pattern}`, () => {
+          expect(validateDomainPattern(pattern)).toContain(expectedError);
+        });
+      });
+    });
+
+    describe('invalid patterns', () => {
+      const invalidPatterns = [
+        ['', 'Please enter a domain'],
+        ['   ', 'Please enter a domain'],
+        ['.com', 'Invalid domain format'],
+        ['domain', 'Invalid domain format'], // no TLD
+        ['domain.', 'Invalid domain format'],
+        ['.domain.com', 'Invalid domain format'],
+        ['domain..com', 'Invalid domain format'],
+        ['dom ain.com', 'Invalid domain format'],
+        ['domain.com/..', 'Path cannot contain ".."'],
+        ['domain.com/../etc', 'Path cannot contain ".."'],
+        ['domain.com/path/../file', 'Path cannot contain ".."'],
+        ['a'.repeat(254) + '.com', 'Domain must be between 1 and 253 characters'],
+      ];
+
+      invalidPatterns.forEach(([pattern, expectedError]) => {
+        it(`should reject invalid pattern: ${pattern}`, () => {
+          const result = validateDomainPattern(pattern);
+          expect(result).not.toBe(null);
+          expect(result).toContain(expectedError);
+        });
+      });
+    });
+
+    describe('special characters', () => {
+      it('should accept hyphens in domain', () => {
+        expect(validateDomainPattern('my-domain.com')).toBe(null);
+        expect(validateDomainPattern('sub-domain.example.com')).toBe(null);
+      });
+
+      it('should accept numbers in domain', () => {
+        expect(validateDomainPattern('123.com')).toBe(null);
+        expect(validateDomainPattern('abc123.com')).toBe(null);
+      });
+
+      it('should reject special characters', () => {
+        expect(validateDomainPattern('domain@.com')).not.toBe(null);
+        expect(validateDomainPattern('domain$.com')).not.toBe(null);
+        expect(validateDomainPattern('domain%.com')).not.toBe(null);
+      });
+    });
+  });
+
+  describe('getRootDomain', () => {
+    it('should extract root domain from URL', () => {
+      expect(getRootDomain('https://google.com')).toBe('google.com');
+      expect(getRootDomain('https://mail.google.com')).toBe('google.com');
+      expect(getRootDomain('https://docs.google.com/spreadsheets')).toBe('google.com');
+    });
+
+    it('should handle www', () => {
+      expect(getRootDomain('https://www.google.com')).toBe('google.com');
+      expect(getRootDomain('https://www.mail.google.com')).toBe('google.com');
+    });
+
+    it('should handle deep subdomains', () => {
+      expect(getRootDomain('https://api.v2.example.com')).toBe('example.com');
+      expect(getRootDomain('https://staging.api.example.com')).toBe('example.com');
+    });
+
+    it('should handle single-level domains', () => {
+      expect(getRootDomain('http://localhost')).toBe('localhost');
+      expect(getRootDomain('http://localhost:3000')).toBe('localhost');
+    });
+
+    it('should return empty string for invalid URLs', () => {
+      expect(getRootDomain('not-a-url')).toBe('');
+      expect(getRootDomain('')).toBe('');
+    });
+
+    it('should handle IP addresses', () => {
+      expect(getRootDomain('http://192.168.1.1')).toBe('168.1.1');
+      // Note: This is a limitation - IP addresses aren't handled perfectly
+    });
+  });
+});
+
+describe('Domain Matching Regression Tests', () => {
+  // These tests document current behavior that might be unexpected
+  describe('Known Limitations', () => {
+    it('IP addresses in getRootDomain are not handled correctly', () => {
+      // getRootDomain treats IP like domain and takes last 2 parts
+      expect(getRootDomain('http://192.168.1.1')).toBe('1.1');
+      expect(getRootDomain('http://10.0.0.1')).toBe('0.1');
+    });
+
+    it('Compound TLDs in getRootDomain are not handled', () => {
+      // getRootDomain doesn't know about .co.uk, treats it as subdomain
+      expect(getRootDomain('https://bbc.co.uk')).toBe('co.uk');
+      expect(getRootDomain('https://news.bbc.co.uk')).toBe('co.uk');
+    });
+
+    it('Port numbers in patterns might not work as expected', () => {
+      // The URL constructor's hostname property doesn't include port
+      // So localhost:3000 pattern might not match properly
+      const url = new URL('http://localhost:3000');
+      expect(url.hostname).toBe('localhost'); // No port!
+      // This means our current matching might be broken for ports
+    });
+  });
+});

@@ -37,6 +37,20 @@
 - [ ] Export creates valid JSON file
 - [ ] Import restores tasks and settings
 
+## Domain Pattern Matching
+- [ ] Root domain (e.g., `google.com`) matches all subdomains
+- [ ] Specific subdomain (e.g., `mail.google.com`) matches only that subdomain
+- [ ] Domain with path (e.g., `github.com/facebook`) matches path prefix
+- [ ] Subdomain with path (e.g., `docs.google.com/spreadsheets`) works correctly
+- [ ] Case insensitive matching (`GitHub.com` = `github.com`)
+- [ ] WWW prefix is ignored (`www.google.com` = `google.com`)
+- [ ] Protocols are rejected with error message
+- [ ] Compound TLDs work correctly (`bbc.co.uk`, `example.com.au`)
+- [ ] Localhost with ports work (`localhost:3000`)
+- [ ] URL-encoded paths are decoded (`/path%20with%20spaces`)
+- [ ] Newly added domains are highlighted in yellow for 2 seconds
+- [ ] Duplicate domains show existing entry with highlight
+
 ## UI/UX
 - [ ] Overlay is centered and responsive
 - [ ] Dark mode works correctly

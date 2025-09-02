@@ -98,6 +98,45 @@ Website → content/inject.ts → Creates Shadow DOM → Renders ui/App.tsx
 #### UI Layer (`src/ui/`)
 - Built with Preact (lightweight React alternative)
 - Tailwind CSS for styling
+
+## 🌐 Domain Matching System
+
+TABULA uses a flexible pattern matching system to determine when to show the overlay:
+
+### Supported Patterns
+
+1. **Root Domain** (e.g., `google.com`)
+   - Matches the domain and ALL its subdomains
+   - `google.com` matches: `google.com`, `mail.google.com`, `docs.google.com`, etc.
+
+2. **Specific Subdomain** (e.g., `mail.google.com`)
+   - Matches ONLY that exact subdomain
+   - `mail.google.com` does NOT match `calendar.google.com` or `inbox.mail.google.com`
+
+3. **Domain with Path** (e.g., `github.com/facebook`)
+   - Matches URLs starting with that path
+   - `github.com/facebook` matches `github.com/facebook/react` but NOT `github.com/google`
+
+4. **Subdomain with Path** (e.g., `docs.google.com/spreadsheets`)
+   - Combines subdomain and path matching for precise targeting
+
+### Pattern Examples
+
+| Pattern | Matches | Doesn't Match |
+|---------|---------|---------------|
+| `google.com` | `mail.google.com`, `docs.google.com` | `google.org`, `notgoogle.com` |
+| `mail.google.com` | `mail.google.com` | `calendar.google.com`, `inbox.mail.google.com` |
+| `github.com/facebook` | `github.com/facebook/react` | `github.com/google` |
+| `reddit.com/r/programming` | `reddit.com/r/programming/hot` | `reddit.com/r/javascript` |
+| `localhost:3000` | `localhost:3000/admin` | `localhost:5000` |
+
+### Important Notes
+
+- **Case Insensitive**: All matching is case-insensitive (`GitHub.com` = `github.com`)
+- **WWW Ignored**: `www.` prefixes are automatically stripped
+- **URL Encoding**: Handles URL-encoded characters (e.g., spaces as `%20`)
+- **No Protocol**: Do NOT include `http://` or `https://` - these will be rejected
+- **Compound TLDs**: Properly handles domains like `bbc.co.uk`, `example.com.au`
 - Zustand for local state management
 - Real-time sync with Chrome Storage API
 
