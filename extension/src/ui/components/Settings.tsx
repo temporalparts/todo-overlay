@@ -404,7 +404,12 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
             type="text"
             value={newDomain}
             onChange={(e) => setNewDomain(e.currentTarget.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddDomain()}
+            onKeyUp={(e) => {
+              // Support Enter, Numpad Enter, and with any modifier keys (Cmd/Ctrl/Shift)
+              if (e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter') {
+                handleAddDomain();
+              }
+            }}
             placeholder="example.com"
             className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           />
