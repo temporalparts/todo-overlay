@@ -38,7 +38,7 @@ TABULA is a Chrome extension that helps you stay focused by showing your task li
 ### Option 1: Install from Chrome Web Store
 
 <a href="https://chromewebstore.google.com/detail/tabula/ljcogekgnjdiknmficpiamehmlnemakg">
-  <img src="https://storage.googleapis.com/web-dev-uploads/image/WlD8wC6g8khYWPJUsQceQkhXSlv1/UV4C4ybeBTsZt43U4xis.png" alt="Available in the Chrome Web Store" height="60">
+  <img src="https://lh3.googleusercontent.com/YgXVyCNJ4S1yussud475NfPYyu9Qxd7w9ix92-pq3fir1kpKlpWAFiXYK5RNXbFzFwWf7XyNd0L7TdA1cmFDWjJ89A=s120" alt="Available in the Chrome Web Store" height="60">
 </a>
 
 ### Option 2: Install from Source (5 minutes)
