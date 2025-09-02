@@ -1,4 +1,4 @@
-# Test Checklist for NudgeNotes MVP
+# Test Checklist for TABULA MVP
 
 ## Installation
 - [ ] Extension loads without errors in chrome://extensions

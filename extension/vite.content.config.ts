@@ -10,7 +10,7 @@ export default defineConfig({
     emptyOutDir: false,
     lib: {
       entry: resolve(__dirname, 'src/content/inject.ts'),
-      name: 'NudgeNotesContent',
+      name: 'TABULAContent',
       formats: ['iife'],
       fileName: () => 'content/inject.js'
     },

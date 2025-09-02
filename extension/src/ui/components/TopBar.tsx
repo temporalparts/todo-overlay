@@ -14,7 +14,7 @@ export default function TopBar({ domain, onSnooze, onDismiss }: TopBarProps) {
           {domain}
         </span>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-          NudgeNotes
+          TABULA
         </h2>
       </div>
       

@@ -2,14 +2,14 @@
 
 ## 1. Reload Extension
 1. Go to `chrome://extensions`
-2. Find NudgeNotes
+2. Find TABULA
 3. Click the refresh icon (↻)
 
 ## 2. Test Auto-Show
 1. Open a new tab
 2. Go to reddit.com
 3. **Expected**: Overlay appears after 1 second
-4. Look for console logs: `[NudgeNotes] Content script loaded...`
+4. Look for console logs: `[TABULA] Content script loaded...`
 
 ## 3. Test Snooze (15 seconds)
 1. Click "Snooze 15s" on the overlay
@@ -25,7 +25,7 @@
 
 ## 5. Test Extension Icon
 1. Go to any website (e.g., google.com)
-2. Click the NudgeNotes extension icon
+2. Click the TABULA extension icon
 3. **Expected**: Overlay opens immediately (even if snoozed)
 
 ## 6. Test Tasks
@@ -37,6 +37,6 @@
 
 ## Troubleshooting
 - Open Chrome DevTools Console (F12)
-- Look for `[NudgeNotes]` messages
+- Look for `[TABULA]` messages
 - Check for any red error messages
 - If no console logs appear, the content script isn't loading

@@ -68,7 +68,7 @@ function Options() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `nudgenotes-backup-${getLocalDateString()}.json`;
+    a.download = `tabula-backup-${getLocalDateString()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -104,7 +104,7 @@ function Options() {
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-900">
       <div className="max-w-3xl mx-auto p-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-          NudgeNotes Settings
+          TABULA Settings
         </h1>
 
         <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg p-6 mb-6">

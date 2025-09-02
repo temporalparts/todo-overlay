@@ -15,7 +15,7 @@ await build({
     emptyOutDir: true,
     lib: {
       entry: resolve(__dirname, 'src/content/inject.ts'),
-      name: 'NudgeNotesContent',
+      name: 'TABULAContent',
       formats: ['iife'],
       fileName: () => 'content/inject.js'
     },

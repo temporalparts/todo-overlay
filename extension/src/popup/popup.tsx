@@ -49,7 +49,7 @@ function Popup() {
     <div className="w-80 p-4 bg-white dark:bg-zinc-900">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-          NudgeNotes
+          TABULA
         </h1>
         <button
           onClick={openOptions}
