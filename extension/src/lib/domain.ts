@@ -164,6 +164,11 @@ export function validateDomainPattern(pattern: string): string | null {
   // Split into domain and path parts
   const [domain, ...pathParts] = normalized.split('/');
   
+  // Check for at least one dot separator (unless it's localhost or an IP)
+  if (!domain.includes('.') && !domain.startsWith('localhost')) {
+    return 'Domain must have at least one dot (e.g., google.com, not just google)';
+  }
+  
   // Validate domain part (no wildcards allowed)
   const domainRegex = /^([a-z0-9]+(-[a-z0-9]+)*\.)*[a-z0-9]+(-[a-z0-9]+)*(\.[a-z]{2,})?$/i;
   const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
