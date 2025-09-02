@@ -1,6 +1,6 @@
-# TABULA Chrome Extension
+# TABULA Extension Development
 
-This directory contains the complete source code for the TABULA Chrome extension.
+This directory contains the Chrome extension source code for TABULA.
 
 ## 🚀 Quick Start
 
@@ -20,270 +20,198 @@ After building, load the `dist/` folder as an unpacked extension in Chrome.
 ## 📂 Project Structure
 
 ```
-extension/
-├── src/                    # Source code
-│   ├── ui/                # UI Components (Preact)
-│   │   ├── App.tsx        # Main application component
-│   │   └── components/    # Reusable components
-│   │       ├── TaskList.tsx      # Task list with drag-and-drop
-│   │       ├── TaskItem.tsx      # Individual task component
-│   │       ├── AddTask.tsx       # Task input component
-│   │       ├── Settings.tsx      # Settings management
-│   │       └── shared/           # Shared UI components
-│   ├── background/        # Background service worker
-│   │   └── index.ts      # Tab management, snooze timers
-│   ├── content/          # Content scripts
-│   │   └── inject.ts     # Overlay injection logic
-│   ├── state/            # State management
-│   │   └── storage.ts    # Chrome storage API wrapper
-│   ├── lib/              # Utility functions
-│   │   └── domain.ts     # Domain parsing utilities
-│   ├── data/             # Static data
-│   │   └── quotes.ts     # Inspirational quotes
-│   └── types.ts          # TypeScript type definitions
-├── public/               # Static assets
-│   ├── manifest.json     # Extension manifest (v3)
-│   ├── icon*.png        # Extension icons
-│   └── *.html           # Extension pages
-├── scripts/             # Build and utility scripts
-│   ├── build-all.js     # Main build orchestrator
-│   ├── bump-version.js  # Version management
-│   ├── convert-svg-to-icons.js  # Icon generation
-│   └── create-store-assets.js   # Chrome Web Store assets
-└── dist/                # Built extension (generated)
+src/
+├── ui/                 # Preact components
+│   ├── App.tsx        # Main app component
+│   └── components/    # Reusable UI components
+├── background/        # Service worker (tab management, timers)
+├── content/          # Content script (overlay injection)
+├── state/            # Chrome storage management
+├── lib/              # Utility functions
+├── data/             # Static data (quotes)
+└── types.ts          # TypeScript definitions
+
+public/               # Static assets & manifest
+scripts/             # Build and utility scripts
+dist/                # Built extension (generated)
 ```
 
-## 🛠️ Available Scripts
+## 🛠️ Available Commands
 
 ### Development
-- `npm run dev` - Start development mode with hot reload
-- `npm run build` - Build production extension with version bump
-- `npm run build:nobump` - Build without version increment
-- `npm run typecheck` - Run TypeScript type checking
-- `npm run lint` - Run ESLint checks
+```bash
+npm run dev          # Development with hot reload
+npm run build        # Production build (bumps version)
+npm run build:nobump # Production build (no version bump)
+npm run typecheck    # TypeScript type checking
+npm run lint         # ESLint checks
+```
+
+### Version Management
+```bash
+npm run version:bump  # Increment patch (0.1.0 → 0.1.1)
+npm run version:minor # Increment minor (0.1.0 → 0.2.0)
+npm run version:major # Increment major (0.1.0 → 1.0.0)
+```
 
 ### Utilities
-- `npm run icons` - Generate PNG icons from SVG source
-- `npm run version:bump` - Increment patch version
-- `npm run version:minor` - Increment minor version
-- `npm run version:major` - Increment major version
-- `npm run generate-quotes` - Update quotes database
-
-## 🏗️ Architecture
-
-### Component Communication
-
+```bash
+npm run icons           # Generate PNG icons from SVG
+npm run generate-quotes # Update quotes database
 ```
-User → Chrome Extension Icon → background/index.ts
-                                      ↓
-Website → content/inject.ts → Creates Shadow DOM → Renders ui/App.tsx
-                                                          ↓
-                                              state/storage.ts ← Chrome Storage API
+
+## 🏗️ Architecture Overview
+
+### Component Flow
+```
+User Action → Extension Icon/Website Visit
+                    ↓
+            Background Worker
+                    ↓
+            Content Script
+                    ↓
+            Shadow DOM (isolated)
+                    ↓
+            Preact UI Components
+                    ↓
+            Chrome Storage API
 ```
 
 ### Key Components
 
-#### Content Script (`src/content/inject.ts`)
+**Content Script** (`src/content/inject.ts`)
 - Injects overlay into web pages
-- Creates isolated Shadow DOM for CSS encapsulation
-- Handles YouTube's CSS interference
-- Manages overlay visibility state
+- Creates Shadow DOM for CSS isolation
+- Handles site-specific edge cases (YouTube, etc.)
 
-#### Background Service Worker (`src/background/index.ts`)
+**Background Worker** (`src/background/index.ts`)
 - Manages snooze/dismiss timers
 - Handles cross-tab communication
-- Controls extension icon badge
-- Manages tab navigation and activation
+- Controls extension badge
 
-#### UI Layer (`src/ui/`)
-- Built with Preact (lightweight React alternative)
+**UI Layer** (`src/ui/`)
+- Preact for lightweight React-like components
 - Tailwind CSS for styling
+- Zustand for state management
 
-## 🌐 Domain Matching System
-
-TABULA uses a flexible pattern matching system to determine when to show the overlay:
-
-### Supported Patterns
-
-1. **Root Domain** (e.g., `google.com`)
-   - Matches the domain and ALL its subdomains
-   - `google.com` matches: `google.com`, `mail.google.com`, `docs.google.com`, etc.
-
-2. **Specific Subdomain** (e.g., `mail.google.com`)
-   - Matches ONLY that exact subdomain
-   - `mail.google.com` does NOT match `calendar.google.com` or `inbox.mail.google.com`
-
-3. **Domain with Path** (e.g., `github.com/facebook`)
-   - Matches URLs starting with that path
-   - `github.com/facebook` matches `github.com/facebook/react` but NOT `github.com/google`
-
-4. **Subdomain with Path** (e.g., `docs.google.com/spreadsheets`)
-   - Combines subdomain and path matching for precise targeting
-
-### Pattern Examples
-
-| Pattern | Matches | Doesn't Match |
-|---------|---------|---------------|
-| `google.com` | `mail.google.com`, `docs.google.com` | `google.org`, `notgoogle.com` |
-| `mail.google.com` | `mail.google.com` | `calendar.google.com`, `inbox.mail.google.com` |
-| `github.com/facebook` | `github.com/facebook/react` | `github.com/google` |
-| `reddit.com/r/programming` | `reddit.com/r/programming/hot` | `reddit.com/r/javascript` |
-| `localhost:3000` | `localhost:3000/admin` | `localhost:5000` |
-
-### Important Notes
-
-- **Case Insensitive**: All matching is case-insensitive (`GitHub.com` = `github.com`)
-- **WWW Ignored**: `www.` prefixes are automatically stripped
-- **URL Encoding**: Handles URL-encoded characters (e.g., spaces as `%20`)
-- **No Protocol**: Do NOT include `http://` or `https://` - these will be rejected
-- **Compound TLDs**: Properly handles domains like `bbc.co.uk`, `example.com.au`
-- Zustand for local state management
-- Real-time sync with Chrome Storage API
-
-#### Storage Layer (`src/state/storage.ts`)
-- Abstraction over Chrome Storage API
+**Storage** (`src/state/storage.ts`)
+- Wrapper around Chrome Storage API
 - Handles data persistence
-- Manages settings and tasks
-- Provides data migration capabilities
+- Real-time sync across tabs
 
-## 🔧 Configuration Files
+## 🌐 Domain Matching
 
-- `manifest.json` - Chrome extension manifest (v3)
-- `vite.config.ts` - Main Vite configuration
-- `vite.content.config.ts` - Content script build config
-- `vite.others.config.ts` - Background/popup build config
-- `tailwind.config.cjs` - Tailwind CSS configuration
-- `tsconfig.json` - TypeScript configuration
+TABULA uses flexible pattern matching to determine when to show:
 
-## 🧪 Testing
+### Pattern Types
 
-### Manual Testing Checklist
-1. **Installation**
-   - Extension loads without errors
-   - Icons appear correctly
-   - Extension popup works
+| Pattern | Example | Matches |
+|---------|---------|---------|
+| Root domain | `google.com` | All subdomains (mail.google.com, docs.google.com) |
+| Specific subdomain | `mail.google.com` | Only that exact subdomain |
+| Domain with path | `github.com/facebook` | URLs starting with that path |
+| Subdomain with path | `docs.google.com/spreadsheets` | Specific subdomain + path |
 
-2. **Core Features**
+### Rules
+- Case insensitive (`GitHub.com` = `github.com`)
+- `www.` prefixes ignored
+- No protocol needed (don't use `http://` or `https://`)
+- Handles compound TLDs (`bbc.co.uk`, `example.com.au`)
+- Minimum one dot required (`google.com` ✓, `google` ✗)
+
+## 🧪 Testing Checklist
+
+Before committing changes, verify:
+
+1. **Build succeeds**: `npm run build`
+2. **No type errors**: `npm run typecheck`
+3. **Core features work**:
    - Overlay appears on configured domains
-   - Tasks can be added/completed/deleted
-   - Drag-and-drop reordering works
-   - Undo functionality (Ctrl/Cmd+Z)
-   - Settings persist across sessions
+   - Tasks can be added/edited/deleted
+   - Drag-and-drop works
+   - Settings persist
+4. **Site-specific testing**:
+   - Reddit.com
+   - YouTube.com
+   - X.com (Twitter)
+   - Custom domains
 
-3. **Cross-site Testing**
-   - Reddit.com - Check message personalization
-   - YouTube.com - Verify CSS interference resistance
-   - X.com - Test overlay display
-   - Custom domains - Add and test new domains
+## 🚢 Release Process
 
-4. **Performance**
-   - No console errors
-   - Smooth animations
-   - Quick load times
-   - Minimal memory usage
+1. **Update version**:
+   ```bash
+   npm run version:minor  # or :major, :bump
+   ```
 
-## 🚢 Deployment
-
-### Chrome Web Store Preparation
-
-1. **Build for production:**
+2. **Build production**:
    ```bash
    npm run build
    ```
 
-2. **Create store assets:**
-   ```bash
-   node scripts/create-store-assets.js
-   ```
-
-3. **Generate submission ZIP:**
+3. **Create ZIP for Chrome Store**:
    ```bash
    cd dist && zip -r ../tabula-extension.zip . && cd ..
    ```
 
-### Files for Chrome Web Store
-- `tabula-extension.zip` - Extension package
-- `store-assets/` - Promotional images
-- `CHROME_STORE_LISTING.md` - Store listing content
-- `PRIVACY.md` - Privacy policy
+4. **Test the ZIP**:
+   - Load in Chrome as unpacked extension
+   - Verify all features work
 
-## 📝 Development Guidelines
+## 💡 Development Tips
 
-### Code Style
-- TypeScript for type safety
-- Functional components with hooks
-- Tailwind CSS for styling
-- ESLint for code quality
+### Adding a New Feature
 
-### Best Practices
-1. **Privacy First** - No external API calls or tracking
-2. **Performance** - Keep bundle size minimal
-3. **User Experience** - Smooth animations, intuitive UI
-4. **Accessibility** - Keyboard navigation support
-5. **Error Handling** - Graceful degradation
+1. Update types in `src/types.ts`
+2. Add UI components in `src/ui/components/`
+3. Update storage if needed in `src/state/storage.ts`
+4. Test across all supported sites
+5. Run `npm run typecheck` before committing
 
-### Adding New Features
-1. Plan the feature and update TODO.md
-2. Implement with TypeScript
-3. Update types in `src/types.ts`
-4. Add UI components in `src/ui/components/`
-5. Update storage logic if needed
-6. Test across all supported sites
-7. Update documentation
+### Debugging
 
-## 🐛 Troubleshooting
+- **Extension not loading**: Check `dist/` folder exists and `manifest.json` is valid
+- **Overlay not appearing**: Check domain settings and console for errors
+- **Tasks not saving**: Check Chrome storage quota and permissions
+- **CSS issues**: Verify Shadow DOM isolation is working
 
-### Common Issues
+### Performance
 
-**Extension not loading:**
-- Ensure you've run `npm run build`
-- Check that you're loading the `dist/` folder
-- Verify manifest.json is valid
+- Keep bundle size minimal (use Preact instead of React)
+- Lazy load components when possible
+- Use Chrome Storage API efficiently (batch operations)
+- Profile with Chrome DevTools Performance tab
 
-**Overlay not appearing:**
-- Check domain is in settings
-- Verify content script permissions
-- Check browser console for errors
+## 📚 Key Technologies
 
-**Tasks not saving:**
-- Check Chrome storage quota
-- Verify storage permissions
-- Look for storage API errors
-
-**YouTube CSS issues:**
-- Ensure inject.ts CSS resets are applied
-- Check Shadow DOM isolation
-- Verify viewport units usage
-
-## 📚 Resources
-
-- [Chrome Extensions Documentation](https://developer.chrome.com/docs/extensions/mv3/)
-- [Manifest V3 Migration](https://developer.chrome.com/docs/extensions/mv3/intro/)
-- [Preact Documentation](https://preactjs.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Chrome Storage API](https://developer.chrome.com/docs/extensions/reference/storage/)
+- **Preact**: Lightweight React alternative (3KB)
+- **Tailwind CSS**: Utility-first CSS framework
+- **TypeScript**: Type safety and better DX
+- **Vite**: Fast build tool
+- **Zustand**: Simple state management
+- **Chrome Extension Manifest V3**: Modern extension API
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Run `npm run typecheck` and `npm run lint`
+5. Test on multiple websites
+6. Submit a pull request
 
-### Contribution Guidelines
-- Follow existing code style
+### Guidelines
+- Follow existing code patterns
+- Keep privacy as top priority
 - Add types for new features
 - Update documentation
-- Test on multiple websites
-- Keep privacy as top priority
+- Test edge cases
 
 ## 📄 License
 
-MIT License - see [LICENSE.txt](../LICENSE.txt) for details.
+MIT License - see [LICENSE.txt](../LICENSE.txt)
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/temporalparts/todo-overlay/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/temporalparts/todo-overlay/discussions)
-- **Support Development**: [Ko-fi](https://ko-fi.com/temporalparts)
+- [GitHub Issues](https://github.com/temporalparts/todo-overlay/issues)
+- [Discussions](https://github.com/temporalparts/todo-overlay/discussions)
+- [Support Development](https://ko-fi.com/temporalparts)

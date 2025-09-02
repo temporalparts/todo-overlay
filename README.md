@@ -5,137 +5,107 @@
 </p>
 
 <p align="center">
-  A powerful Chrome extension that transforms digital distractions into productivity moments by presenting your tasks when you need them most.
+  <strong>Transform distractions into productivity moments.</strong><br>
+  A privacy-first Chrome extension that gently redirects your focus when you need it most.
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#usage">Usage</a> •
-  <a href="#privacy">Privacy</a> •
-  <a href="#development">Development</a> •
-  <a href="#support">Support</a>
+  <a href="https://chromewebstore.google.com/detail/tabula/ljcogekgnjdiknmficpiamehmlnemakg">Install from Chrome Store</a> •
+  <a href="https://github.com/temporalparts/todo-overlay/issues">Report Bug</a> •
+  <a href="https://github.com/temporalparts/todo-overlay/discussions">Discussions</a> •
+  <a href="https://ko-fi.com/temporalparts">Support</a>
 </p>
 
 ---
 
-## 🎯 What is TABULA?
+## What is TABULA?
 
-TABULA is a privacy-first productivity tool that helps you reclaim your time from digital distractions. When you visit potentially time-wasting websites like Reddit, YouTube, or social media, TABULA automatically displays a beautiful full-screen overlay showing your task list, gently reminding you of your real priorities.
+TABULA is a Chrome extension that helps you stay focused by showing your task list when you visit distracting websites. Instead of blocking sites entirely, it presents a beautiful overlay with your priorities, letting you choose whether to continue or refocus.
 
-The name TABULA comes from "tabula rasa" (blank slate), representing the fresh start you get each day to reclaim your time. The acronym also stands for **T**ake **B**ack **Your** **L**ife **A**gain.
+**Why TABULA?** The name comes from "tabula rasa" (blank slate), representing the fresh start you get each day. It also stands for **T**ake **B**ack **Y**our **L**ife **A**gain.
 
-## ✨ Features
+## ✨ Key Features
 
-### Core Functionality (v0.2.6)
-- 📝 **Smart Task Management** - Add, complete, delete, and drag-to-reorder tasks
-- 🎯 **Priority System** - Mark tasks as High/Medium/Low with color coding
-- 📅 **Due Dates** - Set deadlines for your tasks
-- ↩️ **Undo Support** - Cmd/Ctrl+Z to undo deletions, completions, or moves
-- 🌐 **Domain Detection** - Automatically appears on configured websites
-- ⏱️ **Flexible Timing** - Snooze (quick tasks) or dismiss (focused work)
-- 🎨 **Beautiful Design** - Clean, modern interface with dark/light themes
-- 💬 **Inspirational Quotes** - Rotating motivational quotes to keep you focused
-- 🔄 **Real-time Sync** - Tasks synchronize across all browser tabs
-- 🔒 **100% Private** - All data stored locally, no tracking or external servers
+- **🎯 Smart Interventions** - Automatically appears on distracting sites (Reddit, YouTube, X, etc.)
+- **📝 Task Management** - Add, complete, and organize tasks with drag-and-drop
+- **⏱️ Flexible Timing** - Snooze for quick tasks or dismiss for earned break time
+- **🔒 100% Private** - All data stays on your device, no tracking, works offline
+- **🎨 Beautiful Design** - Clean interface with dark/light themes
+- **🔄 Real-time Sync** - Tasks update across all browser tabs instantly
 
-### Smart Interventions
-TABULA intelligently intervenes when you visit:
-- Reddit (with personalized message about not gifting time to Reddit)
-- YouTube (resistant to YouTube's CSS interference)
-- X/Twitter (formerly Twitter)
-- Any custom domains you configure
+## 🚀 Quick Start
 
-## 📦 Installation
+### Option 1: Install from Chrome Web Store
 
-### Option 1: Chrome Web Store (Coming Soon)
-The extension will be available on the Chrome Web Store soon.
+<a href="https://chromewebstore.google.com/detail/tabula/ljcogekgnjdiknmficpiamehmlnemakg">
+  <img src="https://storage.googleapis.com/web-dev-uploads/image/WlD8wC6g8khYWPJUsQceQkhXSlv1/UV4C4ybeBTsZt43U4xis.png" alt="Available in the Chrome Web Store" height="60">
+</a>
 
-### Option 2: Developer Mode (Available Now)
-1. Clone the repository:
+### Option 2: Install from Source (5 minutes)
+
+1. **Clone the repository**
    ```bash
    git clone https://github.com/temporalparts/todo-overlay.git
    cd todo-overlay/extension
    ```
 
-2. Install dependencies and build:
+2. **Build the extension**
    ```bash
    npm install
    npm run build
    ```
 
-3. Load in Chrome:
-   - Open Chrome and go to `chrome://extensions`
+3. **Load in Chrome**
+   - Open `chrome://extensions`
    - Enable "Developer mode" (top right)
    - Click "Load unpacked"
    - Select the `extension/dist` folder
 
-4. Test it:
-   - Navigate to reddit.com, youtube.com, or x.com
-   - TABULA will appear automatically
-   - Or click the extension icon to activate on any site
+4. **Try it out**
+   - Visit reddit.com or youtube.com
+   - TABULA will appear automatically!
 
-## 🚀 Usage
+## 📖 How It Works
 
-### Getting Started
-1. **Add your first task** - Type in the input field and press Enter
-2. **Visit a distracting site** - Go to Reddit, YouTube, or X/Twitter
-3. **See TABULA in action** - Your tasks appear, reminding you of priorities
-4. **Choose your path**:
-   - Complete a task and mark it done ✓
-   - Snooze for a few minutes if you need to handle something urgent
-   - Dismiss for longer if you've earned focused recreation time
+1. **Add your tasks** - Click the extension icon and add what you need to accomplish
+2. **Browse normally** - Go about your regular internet usage
+3. **Get gentle reminders** - When you visit distracting sites, TABULA shows your tasks
+4. **Make conscious choices** - Complete a task, snooze briefly, or dismiss if you've earned a break
+
+## 🎮 Usage Tips
 
 ### Task Management
-- **Add Task**: Type and press Enter or click Add
-- **Complete Task**: Click the checkbox
-- **Delete Task**: Hover and click the trash icon
-- **Reorder Tasks**: Drag and drop to prioritize
-- **Set Priority**: Choose High, Medium, or Low with color indicators
-- **Add Due Date**: Click the calendar icon
-- **Undo Actions**: Cmd/Ctrl+Z
+- **Add tasks**: Type and press Enter
+- **Prioritize**: Set High/Medium/Low priority with colors
+- **Reorder**: Drag and drop tasks
+- **Set deadlines**: Click the calendar icon
+- **Undo mistakes**: Use Ctrl/Cmd+Z
 
 ### Time Controls
-- **Snooze**: Brief pause (default 15 minutes, customizable)
-- **Dismiss**: Longer break (default 60 minutes, customizable)
-- **Manual Trigger**: Click extension icon on any website
+- **Snooze** (15 min default): "I just need to check something quick"
+- **Dismiss** (60 min default): "I've earned some recreation time"
+- **Manual trigger**: Click the extension icon on any website
 
-### Settings
-Access settings through the Settings tab in the overlay:
-- Configure which domains trigger TABULA
-- Adjust snooze and dismiss durations
-- Choose theme (light/dark/auto)
-- Enable/disable quote rotation
-- Manage task settings
+## 🔒 Privacy First
 
-## 🔒 Privacy
-
-**Your data is yours, always.**
-
-- ✅ **100% Local Storage** - All data stays on your device
-- ✅ **No Tracking** - Zero analytics or telemetry
-- ✅ **No External Servers** - Works completely offline
-- ✅ **Open Source** - Fully auditable code
-- ✅ **Data Portability** - Export/import your data anytime
-
-[Read our full Privacy Policy](PRIVACY.md)
+Your data never leaves your device:
+- ✅ 100% local storage
+- ✅ No analytics or tracking
+- ✅ Works completely offline
+- ✅ Open source and auditable
+- ✅ Export your data anytime
 
 ## 🛠️ Development
 
-### Prerequisites
-- Node.js 16+ and npm
-- Chrome or Chromium-based browser
+Want to contribute or customize TABULA?
 
-### Setup
 ```bash
-# Clone the repository
+# Setup
 git clone https://github.com/temporalparts/todo-overlay.git
 cd todo-overlay/extension
-
-# Install dependencies
 npm install
 
-# Development mode (watches for changes)
+# Development (with hot reload)
 npm run dev
 
 # Build for production
@@ -145,102 +115,41 @@ npm run build
 npm run typecheck
 ```
 
-### Project Structure
-```
-extension/
-├── src/
-│   ├── ui/          # Preact components (App, TaskList, Settings)
-│   ├── background/  # Service worker for tab management
-│   ├── content/     # Content script for overlay injection
-│   ├── state/       # Storage and state management
-│   ├── lib/         # Utility functions
-│   └── data/        # Static data (quotes)
-├── public/          # Static assets and manifest
-├── scripts/         # Build and utility scripts
-└── dist/           # Built extension (generated)
-```
-
-### Key Technologies
-- **Frontend**: Preact (lightweight React alternative)
-- **Styling**: Tailwind CSS
-- **Build**: Vite + TypeScript
-- **State**: Zustand + Chrome Storage API
-- **Extension**: Manifest V3
-
-### Contributing
-We welcome contributions! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-See [extension/README.md](extension/README.md) for detailed development instructions.
-
-## 📚 Documentation
-
-- [Extension Documentation](extension/README.md) - Detailed setup and architecture
-- [Privacy Policy](PRIVACY.md) - Our commitment to your privacy
-- [Chrome Store Listing](extension/CHROME_STORE_LISTING.md) - Store information
-- [Release Notes](extension/RELEASE_v0.2.0.md) - Version history
+See [extension/README.md](extension/README.md) for detailed development docs.
 
 ## 🗺️ Roadmap
 
-### Current Features (v0.2.6)
-- ✅ Core task management with drag-and-drop
-- ✅ Priority system (High/Medium/Low)
-- ✅ Due dates with calendar picker
-- ✅ Undo/redo support
-- ✅ Domain detection and auto-display
-- ✅ Snooze/dismiss timers
-- ✅ Dark/light/auto themes
-- ✅ Inspirational quote rotation
-- ✅ Cross-tab synchronization
-- ✅ Data export/import
+### Now Available (v0.2.39)
+✅ Core task management  
+✅ Priority levels & due dates  
+✅ Drag-and-drop reordering  
+✅ Undo/redo support  
+✅ Dark/light themes  
+✅ Quote rotation  
+✅ Cross-tab sync  
 
-### Planned Enhancements
+### Coming Soon
+🏷️ Tags & categories  
+📝 Markdown formatting  
+⌨️ Keyboard shortcuts  
+🔄 Recurring tasks  
+📊 Productivity insights (local only)  
 
-#### Phase 1: Core Improvements
-- 🏷️ **Tags & Labels** - Organize tasks with custom categories
-- 📝 **Markdown Support** - Rich text formatting for task descriptions
-- ⌨️ **Keyboard Shortcuts** - Power user navigation
-- 🔍 **Search & Filter** - Find tasks quickly
+## 💬 Community & Support
 
-#### Phase 2: Advanced Features
-- 🔄 **Recurring Tasks** - Daily/weekly/monthly task templates
-- 🔔 **Notifications** - Desktop reminders for due tasks
-- 📊 **Analytics** - Track productivity patterns (local only)
-- 🎯 **Auto-sort** - Intelligent task prioritization
-
-#### Phase 3: Ecosystem
-- 📅 **Calendar Integration** - Sync with Google Calendar/Outlook
-- 📱 **Mobile Companion** - iOS/Android apps
-- 🌍 **Internationalization** - Multi-language support
-- 🔄 **Cloud Sync** - Optional encrypted backup (privacy-first)
-
-See [TODO.md](TODO.md) for detailed feature planning and technical considerations.
-
-## 💬 Support
-
-### Get Help
-- [GitHub Issues](https://github.com/temporalparts/todo-overlay/issues) - Report bugs or request features
-- [Discussions](https://github.com/temporalparts/todo-overlay/discussions) - Ask questions and share ideas
-
-### Support Development
-If TABULA helps you reclaim your time, consider supporting development:
-
-<a href="https://ko-fi.com/temporalparts">
-  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support on Ko-fi" height="36">
-</a>
+- **[Report Issues](https://github.com/temporalparts/todo-overlay/issues)** - Found a bug? Let us know!
+- **[Discussions](https://github.com/temporalparts/todo-overlay/discussions)** - Share ideas and get help
+- **[Support Development](https://ko-fi.com/temporalparts)** - If TABULA helps you, consider supporting it
 
 ## 📄 License
 
-MIT License - see [LICENSE.txt](LICENSE.txt) for details.
+MIT License - see [LICENSE.txt](LICENSE.txt)
 
 ---
 
 <p align="center">
-  <strong>Take back your life again.</strong><br>
-  Transform every moment of distraction into an opportunity to focus on what truly matters.
+  <strong>Ready to reclaim your time?</strong><br>
+  Install TABULA and transform distractions into productivity.
 </p>
 
 <p align="center">
