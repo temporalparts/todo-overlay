@@ -365,28 +365,28 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onReorde
                 Past ({overdueTasks.length})
               </h3>
             )}
-            {(showOverdue || activeTasks.length === 0) && (
-              <button
-                onClick={handleSortPast}
-                disabled={isPastSorted}
-                className={`px-3 py-1 text-xs font-medium rounded-md border transition-all flex items-center gap-1 ${
-                  isPastSorted
-                    ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 cursor-default'
-                    : 'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 cursor-pointer'
-                }`}
-              >
-                {isPastSorted ? (
-                  <>
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Sorted
-                  </>
-                ) : (
-                  'Sort'
-                )}
-              </button>
-            )}
+            <button
+              onClick={handleSortPast}
+              disabled={isPastSorted}
+              className={`px-3 py-1 text-xs font-medium rounded-md border flex items-center gap-1 ${
+                isPastSorted
+                  ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 cursor-default'
+                  : 'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-700 cursor-pointer'
+              } ${
+                (showOverdue || activeTasks.length === 0) ? 'visible' : 'invisible'
+              }`}
+            >
+              {isPastSorted ? (
+                <>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Sorted
+                </>
+              ) : (
+                'Sort'
+              )}
+            </button>
           </div>
           {(showOverdue || activeTasks.length === 0) && (
             <div className="space-y-2">
