@@ -304,8 +304,8 @@ class OverlayManager {
     }
   }
 
-  async handleSnooze(minutes: number) {
-    console.log(`[TABULA] handleSnooze called with ${minutes} minutes`);
+  async handleSnooze(minutes: number, actionType: 'snooze' | 'dismiss' = 'snooze') {
+    console.log(`[TABULA] handleSnooze called with ${minutes} minutes (${actionType})`);
     const domain = getRootDomain(window.location.href);
     
     try {
@@ -320,7 +320,8 @@ class OverlayManager {
       const response = await browser.runtime.sendMessage({
         type: 'SNOOZE_DOMAIN',
         domain,
-        minutes
+        minutes,
+        actionType
       });
       
       console.log('[TABULA] Snooze response:', response);

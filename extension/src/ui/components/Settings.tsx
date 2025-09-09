@@ -4,6 +4,8 @@ import browser from 'webextension-polyfill';
 import { getSettings, saveSettings } from '../../state/storage';
 import { Settings as SettingsType } from '../../types';
 import { normalizeDomainPattern, validateDomainPattern } from '../../lib/domain';
+import EngagementDisplay from './EngagementDisplay';
+import type { EngagementSettings } from '../../types/engagement';
 
 interface SettingsProps {
   scrollToDomains?: boolean;
@@ -33,12 +35,21 @@ function DomainRow({ domain, onRemove, highlightOnCreate = false }: DomainRowPro
     <div className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-700 rounded-lg transition-all duration-300 ${
       isHighlighted ? 'ring-2 ring-yellow-300 dark:ring-yellow-600' : ''
     }`}>
-      <span className="text-gray-900 dark:text-white font-mono text-sm">
-        {domain}
-      </span>
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <span className="text-gray-900 dark:text-white font-mono text-sm">
+          {domain}
+        </span>
+        <div className="text-gray-500 dark:text-gray-400">
+          <EngagementDisplay 
+            domain={domain}
+            mode="settings"
+            showTimer={false}
+          />
+        </div>
+      </div>
       <button
         onClick={() => onRemove(domain)}
-        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 ml-3 flex-shrink-0"
         title="Remove domain"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,7 +67,10 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
   const [justAddedDomains, setJustAddedDomains] = useState<Set<string>>(new Set());
   const [domainError, setDomainError] = useState<string | null>(null);
   const [showPatternHelp, setShowPatternHelp] = useState(false);
+  const [engagementSettings, setEngagementSettings] = useState<EngagementSettings | null>(null);
+  const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
   const domainsRef = useRef<HTMLDivElement>(null);
+  const privacyRef = useRef<HTMLDivElement>(null);
 
   // Helper to format time display for settings
   const formatTimeDisplay = (minutes: number): string => {
@@ -84,6 +98,7 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
 
   useEffect(() => {
     loadSettings();
+    loadEngagementSettings();
   }, []);
 
   useEffect(() => {
@@ -149,6 +164,38 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
     const loadedSettings = await getSettings();
     setSettings(loadedSettings);
     setLoading(false);
+  };
+
+  const loadEngagementSettings = async () => {
+    try {
+      const settings = await browser.runtime.sendMessage({ type: 'GET_ENGAGEMENT_SETTINGS' });
+      setEngagementSettings(settings);
+    } catch (error) {
+      console.error('Failed to load engagement settings:', error);
+    }
+  };
+
+  const updateEngagementSettings = async (updates: Partial<EngagementSettings>) => {
+    try {
+      await browser.runtime.sendMessage({ 
+        type: 'UPDATE_ENGAGEMENT_SETTINGS', 
+        settings: updates 
+      });
+      setEngagementSettings(prev => prev ? { ...prev, ...updates } : null);
+    } catch (error) {
+      console.error('Failed to update engagement settings:', error);
+    }
+  };
+
+  const clearAllEngagementData = async () => {
+    if (confirm('This will permanently delete all engagement tracking data. Are you sure?')) {
+      try {
+        await browser.runtime.sendMessage({ type: 'CLEAR_ENGAGEMENT_DATA' });
+        alert('All engagement data has been cleared.');
+      } catch (error) {
+        console.error('Failed to clear engagement data:', error);
+      }
+    }
   };
 
   const handleAddDomain = async () => {
@@ -638,6 +685,169 @@ export default function Settings({ scrollToDomains, onScrollComplete }: Settings
             ))
           )}
         </div>
+      </div>
+
+      {/* Engagement Tracking Settings */}
+      <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6" ref={privacyRef}>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Engagement Tracking & Privacy
+        </h3>
+        
+        {/* Privacy Notice */}
+        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-green-800 dark:text-green-300 mb-1">
+                Your Privacy is Protected
+              </p>
+              <p className="text-xs text-green-700 dark:text-green-400">
+                All engagement statistics are stored locally on your device. No data is ever sent to external servers. 
+                This information is for your personal bookkeeping only.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {engagementSettings && (
+          <>
+            {/* Enable/Disable Tracking */}
+            <div className="space-y-4 mb-6">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={engagementSettings.enabled}
+                  onChange={(e) => updateEngagementSettings({ enabled: (e.target as HTMLInputElement).checked })}
+                  className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                />
+                <div>
+                  <span className="text-gray-900 dark:text-white font-medium">
+                    Enable Engagement Tracking
+                  </span>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Track how often you pause sites to help understand your habits
+                  </p>
+                </div>
+              </label>
+
+              {engagementSettings.enabled && (
+                <>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={engagementSettings.showInOverlay}
+                      onChange={(e) => updateEngagementSettings({ showInOverlay: (e.target as HTMLInputElement).checked })}
+                      className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                    />
+                    <div>
+                      <span className="text-gray-900 dark:text-white">
+                        Show statistics in overlay
+                      </span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        Display pause count under snooze/dismiss buttons
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={engagementSettings.showInSettings}
+                      onChange={(e) => updateEngagementSettings({ showInSettings: (e.target as HTMLInputElement).checked })}
+                      className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                    />
+                    <div>
+                      <span className="text-gray-900 dark:text-white">
+                        Show statistics for each domain
+                      </span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        Display metrics next to each enabled domain above
+                      </p>
+                    </div>
+                  </label>
+                </>
+              )}
+            </div>
+
+            {/* Display Mode */}
+            {engagementSettings.enabled && (
+              <div className="mb-6">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                  Statistics Time Range
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(['today', '24hours', 'week', 'month'] as const).map(mode => (
+                    <button
+                      key={mode}
+                      onClick={() => updateEngagementSettings({ displayMode: mode })}
+                      className={`px-3 py-1.5 rounded-lg border text-sm ${
+                        engagementSettings.displayMode === mode
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white dark:bg-zinc-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-zinc-600'
+                      }`}
+                    >
+                      {mode === 'today' ? 'Today' : 
+                       mode === '24hours' ? 'Last 24 Hours' : 
+                       mode === 'week' ? 'Last 7 Days' : 
+                       'Last 30 Days'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Data Retention */}
+            {engagementSettings.enabled && (
+              <div className="mb-6">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                  Data Retention Policy
+                </label>
+                <select
+                  value={engagementSettings.retentionDays}
+                  onChange={(e) => updateEngagementSettings({ retentionDays: parseInt((e.target as HTMLSelectElement).value) })}
+                  className="px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="0">Don't keep history (today only)</option>
+                  <option value="7">Keep for 7 days</option>
+                  <option value="30">Keep for 30 days</option>
+                  <option value="90">Keep for 90 days</option>
+                  <option value="-1">Keep forever</option>
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Older data will be automatically deleted based on this setting
+                </p>
+              </div>
+            )}
+
+            {/* Clear Data Button */}
+            <div className="pt-4 border-t border-gray-200 dark:border-zinc-700">
+              <button
+                onClick={clearAllEngagementData}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
+              >
+                Clear All Engagement Data
+              </button>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Permanently delete all stored engagement statistics. This cannot be undone.
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* Global statistics */}
+        {engagementSettings?.enabled && (
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-zinc-700">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              All Domains Combined
+            </h4>
+            <EngagementDisplay 
+              mode="settings"
+              showTimer={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -9,9 +9,10 @@ import { getShuffledQuotes, Quote } from '../data/quotes';
 import TaskList from './components/TaskList';
 import AddTask from './components/AddTask';
 import Settings from './components/Settings';
+import EngagementDisplay from './components/EngagementDisplay';
 
 interface AppProps {
-  onSnooze?: (minutes: number) => void;
+  onSnooze?: (minutes: number, actionType?: 'snooze' | 'dismiss') => void;
   onDismiss?: () => void;
   isNewTab?: boolean;  // Experience 1: New Tab page
   customControls?: any; // Custom controls for special pages
@@ -322,7 +323,7 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
     try {
       const minutes = settings?.snoozeMinutes || 15;
       if (onSnooze) {
-        onSnooze(minutes);
+        onSnooze(minutes, 'snooze');
       }
     } catch (error) {
       console.error('[TABULA App] Error calling onSnooze:', error);
@@ -340,7 +341,7 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
       } else if (onSnooze) {
         // For enabled domains, dismiss is just a longer snooze
         const minutes = settings?.dismissMinutes || 60;
-        onSnooze(minutes);
+        onSnooze(minutes, 'dismiss');
       }
     } catch (error) {
       console.error('[TABULA App] Error calling dismiss/snooze:', error);
@@ -450,29 +451,43 @@ export default function App({ onSnooze, onDismiss, isNewTab = false, customContr
               )}
             </div>
             
-            {/* Right side - Action buttons */}
+            {/* Right side - Action buttons and stats */}
             {customControls ? (
               customControls
             ) : (
-              <div className="flex gap-2">
-                {!isNewTab && isEnabledDomain && (
+              <div className="text-right">
+                <div className="flex gap-2 justify-end">
+                  {!isNewTab && isEnabledDomain && (
+                    <button
+                      onClick={handleSnooze}
+                      className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
+                      title={`Snooze for ${settings?.snoozeMinutes || 15} minutes`}
+                    >
+                      <span className="hidden xs:inline">Snooze </span>
+                      <span>({formatTime(settings?.snoozeMinutes || 15)})</span>
+                    </button>
+                  )}
                   <button
-                    onClick={handleSnooze}
+                    onClick={handleDismiss}
                     className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
-                    title={`Snooze for ${settings?.snoozeMinutes || 15} minutes`}
+                    title={isNewTab ? "Show Chrome's default new tab" : isEnabledDomain ? `Dismiss for ${settings?.dismissMinutes || 60} minutes` : "Close tabula"}
                   >
-                    <span className="hidden xs:inline">Snooze </span>
-                    <span>({formatTime(settings?.snoozeMinutes || 15)})</span>
+                    <span className="hidden xs:inline">{isNewTab ? 'Default Tab' : 'Dismiss'} </span>
+                    <span>{isNewTab ? '' : isEnabledDomain ? `(${formatTime(settings?.dismissMinutes || 60)})` : ''}</span>
                   </button>
+                </div>
+                {/* Engagement tracking display - flush right under buttons */}
+                {!isNewTab && isEnabledDomain && (
+                  <div className="mt-1">
+                    <EngagementDisplay 
+                      domain={currentDomain}
+                      mode="overlay"
+                      showTimer={true}
+                      snoozeMinutes={settings?.snoozeMinutes || 15}
+                      dismissMinutes={settings?.dismissMinutes || 60}
+                    />
+                  </div>
                 )}
-                <button
-                  onClick={handleDismiss}
-                  className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-normal transition-colors text-sm whitespace-nowrap"
-                  title={isNewTab ? "Show Chrome's default new tab" : isEnabledDomain ? `Dismiss for ${settings?.dismissMinutes || 60} minutes` : "Close tabula"}
-                >
-                  <span className="hidden xs:inline">{isNewTab ? 'Default Tab' : 'Dismiss'} </span>
-                  <span>{isNewTab ? '' : isEnabledDomain ? `(${formatTime(settings?.dismissMinutes || 60)})` : ''}</span>
-                </button>
               </div>
             )}
           </div>

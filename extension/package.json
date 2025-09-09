@@ -1,6 +1,6 @@
 {
   "name": "tabula",
-  "version": "0.2.47",
+  "version": "0.2.54",
   "description": "Turns Reddit, YouTube & Twitter into your todo list. 100% private (no tracking), open-source, minimal permissions. Take Back Your Life Again.",
   "type": "module",
   "scripts": {

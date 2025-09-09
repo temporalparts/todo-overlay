@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 import { getRootDomain } from '../lib/domain';
 import { getSettings, isdomainSnoozed, setSnoozeForDomain } from '../state/storage';
+import { EngagementTracker } from '../lib/engagement';
 
 // Track active snooze timers
 const snoozeTimers = new Map<string, number>();
@@ -97,9 +98,12 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
     return { shouldShow };
   } else if (message.type === 'SNOOZE_DOMAIN') {
     console.log(`[Background] Received SNOOZE_DOMAIN for ${message.domain}, ${message.minutes} minutes`);
-    const { domain, minutes } = message;
+    const { domain, minutes, actionType } = message;
     
     try {
+      // Track engagement metrics
+      await EngagementTracker.trackAction(domain, minutes, actionType || 'snooze');
+      
       // Set snooze in storage
       await setSnoozeForDomain(domain, minutes);
       
@@ -161,6 +165,22 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
       console.error('[Background] Error handling SNOOZE_DOMAIN:', error);
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
+  } else if (message.type === 'GET_ENGAGEMENT_STATS') {
+    const stats = await EngagementTracker.getStats(message.domain);
+    return stats;
+  } else if (message.type === 'GET_ENGAGEMENT_SETTINGS') {
+    const metrics = await EngagementTracker.getMetrics();
+    return metrics.settings;
+  } else if (message.type === 'UPDATE_ENGAGEMENT_SETTINGS') {
+    await EngagementTracker.updateSettings(message.settings);
+    return { success: true };
+  } else if (message.type === 'CLEAR_ENGAGEMENT_DATA') {
+    if (message.domain) {
+      await EngagementTracker.clearDomainData(message.domain);
+    } else {
+      await EngagementTracker.clearAllData();
+    }
+    return { success: true };
   }
 });
 
