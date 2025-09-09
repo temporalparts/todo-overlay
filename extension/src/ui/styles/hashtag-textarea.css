@@ -1,0 +1,76 @@
+/* Hashtag Textarea Container */
+.hashtag-textarea-container {
+  @apply relative;
+  position: relative;
+}
+
+/* Overlay for styled hashtags */
+.hashtag-overlay {
+  @apply absolute inset-0 pointer-events-none;
+  @apply px-3 py-2;
+  @apply text-transparent;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Transparent textarea on top */
+.hashtag-textarea {
+  @apply relative w-full px-3 py-2;
+  @apply bg-transparent;
+  @apply border border-gray-300 rounded-md;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+  color: transparent;
+  caret-color: black;
+  resize: vertical;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  z-index: 1;
+}
+
+/* Make text visible in overlay */
+.hashtag-overlay span:not(.hashtag-box) {
+  @apply text-gray-900;
+}
+
+/* Inline Hashtag Input */
+.inline-hashtag-container {
+  @apply relative inline-block w-full;
+}
+
+.hashtag-display-overlay {
+  @apply absolute inset-0 px-3 py-2;
+  @apply pointer-events-none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hashtag-input-field {
+  @apply w-full px-3 py-2;
+  @apply bg-transparent;
+  @apply border border-gray-300 rounded-md;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+  color: transparent;
+  caret-color: black;
+  position: relative;
+  z-index: 1;
+}
+
+.hashtag-display-overlay span:not(.hashtag-box) {
+  @apply text-gray-900;
+}
+
+/* Responsive hashtag boxes */
+.hashtag-box {
+  white-space: nowrap;
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: baseline;
+}

@@ -4,6 +4,8 @@ import { Priority } from '../../../types';
 import PrioritySelector from './PrioritySelector';
 import DatePicker from './DatePicker';
 import { getLocalDateString } from '../../../lib/date';
+import { HashtagEnhancer } from '../HashtagEnhancer';
+import '../../styles/hashtag-minimal.css';
 
 interface TaskFormProps {
   initialTitle?: string;
@@ -101,25 +103,28 @@ export default function TaskForm({
     <div className="space-y-3" onKeyDown={handleFormKeyDown}>
       <div className="space-y-2">
         <div className="flex gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={title}
-            onInput={(e) => handleInputChange((e.target as HTMLInputElement).value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape' && showCancel && onCancel) {
-                onCancel();
-              }
-            }}
-            placeholder={placeholder}
-            className={`flex-1 px-3 py-1.5 text-sm border rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${
-              showError 
-                ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' 
-                : 'border-gray-200 dark:border-zinc-700 focus:ring-indigo-500 dark:focus:ring-indigo-400'
-            } ${showCancel ? '' : 'px-4 py-2'}`}
-            autoFocus={autoFocus}
-            tabIndex={1}
-          />
+          <div className="task-input-wrapper flex-1">
+            <HashtagEnhancer inputRef={inputRef} value={title} />
+            <input
+              ref={inputRef}
+              type="text"
+              value={title}
+              onInput={(e) => handleInputChange((e.target as HTMLInputElement).value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape' && showCancel && onCancel) {
+                  onCancel();
+                }
+              }}
+              placeholder={placeholder}
+              className={`task-input-with-hashtags w-full px-3 py-1.5 text-sm border rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${
+                showError 
+                  ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' 
+                  : 'border-gray-200 dark:border-zinc-700 focus:ring-indigo-500 dark:focus:ring-indigo-400'
+              } ${showCancel ? '' : 'px-4 py-2'}`}
+              autoFocus={autoFocus}
+              tabIndex={1}
+            />
+          </div>
           <button
             type="button"
             onClick={() => handleSubmit()}

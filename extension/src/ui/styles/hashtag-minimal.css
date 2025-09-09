@@ -1,0 +1,48 @@
+/* Minimal hashtag styling - subtle enhancement */
+.task-input-wrapper {
+  position: relative;
+}
+
+.hashtag-overlay-display {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  white-space: pre;
+  color: transparent;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.hashtag-overlay-display .hashtag-highlight {
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.4);
+  color: transparent;
+}
+
+/* Dark mode adjustments */
+.dark .hashtag-overlay-display .hashtag-highlight {
+  background: rgba(129, 140, 248, 0.15);
+  box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.5);
+}
+
+/* Ensure input remains on top and visible */
+.task-input-with-hashtags {
+  position: relative;
+  z-index: 2;
+  background: transparent !important;
+}
+
+/* Optional: Add subtle animation when hashtag is detected */
+@keyframes hashtag-pulse {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.hashtag-overlay-display .hashtag-highlight {
+  animation: hashtag-pulse 0.3s ease-out;
+}

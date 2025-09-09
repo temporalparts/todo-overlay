@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TABULA",
-  "version": "0.2.54",
+  "version": "0.2.55",
   "description": "Turns Reddit, YouTube & Twitter into your todo list. 100% private, open-source, minimal permissions.",
   "action": {
     "default_title": "TABULA - Take Back Your Life Again",
